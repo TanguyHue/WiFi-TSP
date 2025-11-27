@@ -243,7 +243,10 @@ Clicar em Project, na barra de menus da página (acima e à esquerda). Lá procu
 
 %%%%%%% Bibliografia %%%%%%%%
 \addcontentsline{toc}{section}{Referências}  
-\bibliography{bib/IEEEreferencias.bib} 
+\IfFileExists{bib/IEEEreferencias.bib}{
+  \bibliographystyle{IEEEtran}
+  \bibliography{bib/IEEEreferencias.bib}
+}{}
 %%%%%%% Bibliografía %%%%%%%%    
 
 \appendix  
