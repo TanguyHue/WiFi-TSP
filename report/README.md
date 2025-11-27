@@ -59,7 +59,7 @@ start SumatraPDF.exe main.pdf
 VSCode :
 
 * Installer l’extension **LaTeX Workshop**
-* Ouvrir `main.pdf` → le refresh automatique fonctionne dès `make watch`
+* Ouvrir `main.pdf` $\rightarrow$ le refresh automatique fonctionne dès `make watch`
 
 ---
 
