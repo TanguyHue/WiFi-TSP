@@ -1,7 +1,42 @@
 \section{Fonctionnement des Protocoles Wi-Fi}
 \label{sec:protocoles}
 
-La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis WEP en 1997 jusqu'à WPA3 en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles primitives cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance accrue aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
+La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis WEP en 1997 jusqu'à WPA3 en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
+
+\subsection*{Définitions générales Wi-Fi}
+
+Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{SSID} (\textit{Service Set Identifier}) correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{BSSID}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{AP} (\textit{Access Point}) désigne ce même point d’accès, tandis que la \textbf{STA} (station) représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, node distance=3cm]
+
+% AP au centre
+\node[draw, rounded corners, align=center, inner sep=4pt] (ap) {Point d'accès (AP)\\[2pt]
+\textbf{SSID} : \texttt{LabWiFi}\\
+\textbf{BSSID} : \texttt{00:11:22:33:44:55}};
+
+% Stations autour
+\node[draw, rounded corners, left=of ap, align=center, inner sep=4pt] (sta1) {Station 1 (STA)\\PC portable};
+\node[draw, rounded corners, right=of ap, align=center, inner sep=4pt] (sta2) {Station 2 (STA)\\Smartphone};
+\node[draw, rounded corners, below=of ap, align=center, inner sep=4pt] (sta3) {Station 3 (STA)\\IoT / Objet connecté};
+
+% Liens
+\draw[<->] (ap) -- node[above]{Trames 802.11} (sta1);
+\draw[<->] (ap) -- node[above]{Trames 802.11} (sta2);
+\draw[<->] (ap) -- node[right]{Trames 802.11} (sta3);
+
+\end{tikzpicture}
+\caption{Illustration des notions AP, STA, SSID et BSSID dans un réseau Wi-Fi}
+\label{fig:ap_sta_ssid_bssid}
+\end{figure}
+
+Les communications Wi-Fi reposent sur des trames qui circulent au niveau de la couche MAC du modèle 802.11. On distingue notamment les trames de \textit{gestion}, essentielles pour l’association, l’authentification ou la déconnexion ; les trames de \textit{contrôle}, destinées à réguler l’accès au médium ; et les trames de \textit{données}, qui transportent l’information utilisateur ou les paquets réseau encapsulés. La plupart des attaques Wi-Fi tirent parti de la possibilité d’observer, d’injecter ou de manipuler ces différentes catégories de trames.
+
+Enfin, plusieurs notions cryptographiques apparaissent régulièrement dans ce chapitre. La \textbf{PMK} (\textit{Pairwise Master Key}) constitue le secret partagé à partir duquel toutes les clés de session sont dérivées, tandis que la \textbf{PTK} (\textit{Pairwise Transient Key}) correspond à la clé spécifique à la connexion entre un client et un point d’accès. La \textbf{GTK} (\textit{Group Temporal Key}) est utilisée pour chiffrer le trafic multicast ou broadcast adressé à plusieurs stations. Ces clés sont produites ou échangées dans le cadre de mécanismes tels que le 4-Way Handshake ou les protocoles d’authentification EAP, qui seront détaillés dans les sections suivantes.
+
+Ces notions constituent le socle indispensable à la compréhension des protocoles de sécurisation Wi-Fi et des vulnérabilités qu’ils cherchent à prévenir.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % WEP
@@ -16,7 +51,7 @@ WEP repose sur l'algorithme de chiffrement par flot RC4. Le mécanisme de chiffr
 \begin{itemize}
     \item une clé secrète partagée statique (40 ou 104 bits) ;
     \item un vecteur d'initialisation (IV) de 24 bits, envoyé en clair ;
-    \item concaténation \texttt{IV || clé} comme entrée du KSA de RC4 ;
+    \item concaténation \texttt{IV || clé} comme entrée de RC4 ;
     \item un ICV (Integrity Check Value) calculé via CRC-32, ajouté au plaintext avant chiffrement.
 \end{itemize}
 
@@ -43,29 +78,62 @@ Le chiffrement d'un paquet se fait ainsi :
 \label{fig:wep}
 \end{figure}
 
-\paragraph{Format d'une trame WEP}
+\subsubsection*{Format d'une trame WEP}
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}
-\node[draw, minimum width=3cm] (hdr) {802.11 Header};
-\node[draw, right=0cm of hdr, minimum width=2cm] (iv) {IV};
-\node[draw, right=0cm of iv, minimum width=4cm] (data) {Données chiffrées};
-\node[draw, right=0cm of data, minimum width=2cm] (icv) {ICV (CRC-32)};
+\begin{tikzpicture}[>=latex, node distance=0cm]
+
+% Bloc 802.11 Header
+\node[
+    draw,
+    minimum width=3.2cm,
+    minimum height=1.1cm,
+    align=center
+] (hdr) {802.11\\Header};
+
+% Bloc IV
+\node[
+    draw,
+    minimum width=2.2cm,
+    minimum height=1.1cm,
+    align=center,
+    right=0.1cm of hdr
+] (iv) {IV\\(24 bits)};
+
+% Bloc Données chiffrées
+\node[
+    draw,
+    minimum width=4.8cm,
+    minimum height=1.1cm,
+    align=center,
+    right=0.1cm of iv
+] (data) {Données\\chiffrées (RC4)};
+
+% Bloc ICV
+\node[
+    draw,
+    minimum width=2.5cm,
+    minimum height=1.1cm,
+    align=center,
+    right=0.1cm of data
+] (icv) {ICV\\(CRC-32)};
+
 \end{tikzpicture}
 \caption{Format d'une trame WEP}
+\label{fig:wep-frame}
 \end{figure}
 
 \paragraph{Faiblesses cryptographiques majeures}
 
 \begin{itemize}
     \item IV de 24 bits : collisions quasi certaines en quelques minutes.
-    \item RC4 présente des biais initiaux exploités par les attaques FMS, KoreK et PTW.
-    \item CRC-32 n'est pas une fonction d'intégrité cryptographique : vulnérable au bit-flipping.
     \item Pas de renouvellement de clé : longue exposition.
 \end{itemize}
 
 Ces vulnérabilités rendent WEP totalement compromis : casser une clé WEP prend moins d'une minute dans des conditions favorables.
+
+\newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % WPA
@@ -79,8 +147,8 @@ Face à la crise WEP, la Wi-Fi Alliance introduit en 2003 WPA comme correctif tr
 WPA introduit plusieurs mécanismes :
 \begin{itemize}
     \item un mélange de clés élaboré (phase 1 et phase 2) ;
-    \item un compteur TSC (TKIP Sequence Counter) antipiratage ;
-    \item un MIC (Message Integrity Code) ;
+    \item un compteur TSC (TKIP Sequence Counter) pour de l'anti-replay ;
+    \item un MIC (Message Integrity Code) pour de l'intégrité ;
     \item une rotation des clés fréquente.
 \end{itemize}
 
@@ -95,7 +163,7 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
 
 \subsubsection*{Modes d’authentification}
 \begin{itemize}
-    \item \textbf{WPA2-PSK} : la PMK = PBKDF2(passphrase, SSID).
+    \item \textbf{WPA2-PSK} : la PMK (\textit{Pairwise Master Key} : clé maitresse) = PBKDF2(\textit{Password-Based Key Derivation Function 2} : basée sur une passphrase et le SSID).
     \item \textbf{WPA2-Enterprise} : PMK fournie via un serveur RADIUS et une authentification EAP.
 \end{itemize}
 
@@ -107,8 +175,8 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
 Le handshake assure :
 \begin{itemize}
     \item la preuve de possession mutuelle de la PMK ;
-    \item la génération de la PTK ;
-    \item la distribution de la GTK.
+    \item la génération de la PTK (\textit{Pairwise Transient Key}) ;
+    \item la distribution de la GTK (\textit{Group Temporal Key}).
 \end{itemize}
 
 \begin{figure}[H]
@@ -134,7 +202,17 @@ Le handshake assure :
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PMK -> PTK -> GTK derivation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Dérivation des clés : PMK, PTK et GTK}
+\subsection{Dérivation des clés}
+
+Au-delà de l’échange de messages représenté dans la Figure~\ref{fig:4way}, le 4-Way Handshake repose sur un mécanisme de dérivation de clés particulièrement structuré. L’ensemble du processus débute avec la PMK (Pairwise Master Key), qui constitue la base cryptographique partagée entre le client et le point d’accès. Dans le cas d’un réseau WPA2-PSK, cette PMK résulte directement de l’application d’une fonction de dérivation (PBKDF2) sur la passphrase et le SSID ; dans un environnement Enterprise, elle est fournie après l’authentification EAP par un serveur RADIUS. L’objectif du handshake n’est donc pas de négocier une nouvelle clé, mais de prouver que les deux entités possèdent bien cette PMK sans jamais la transmettre.
+
+À partir de cette PMK, les deux parties vont dériver une clé plus large appelée PTK (Pairwise Transient Key). La construction de la PTK repose sur plusieurs éléments : l’adresse MAC du point d’accès, celle du client, ainsi que deux valeurs aléatoires appelées ANonce (envoyée par l’AP) et SNonce (envoyée par la station). Ces quatre paramètres garantissent que la PTK générée est unique pour chaque session, même si la PMK reste identique : une propriété essentielle pour éviter la réutilisation de clés et limiter les risques d’attaque par rejeu ou par corrélation.
+
+La PTK n’est pas utilisée directement ; elle est découpée en trois sous-clés distinctes, chacune remplissant un rôle spécifique dans la sécurisation du lien. La première est la KCK (Key Confirmation Key), employée pour calculer les MIC (Message Integrity Code) des messages du handshake. Elle permet à chaque partie de vérifier que l’autre possède bien la PTK correcte, et donc implicitement la PMK. La deuxième sous-clé est la KEK (Key Encryption Key), utilisée par l’AP pour chiffrer la GTK (Group Temporal Key) transmise dans le message~3. Cette clé assure que seul un client légitime peut recevoir ou mettre à jour la clé de diffusion. Enfin, la dernière composante est la TK (Temporal Key), qui servira au chiffrement effectif du trafic unicast échangé entre la station et l’AP après la fin du handshake.
+
+Un autre élément important est la présence de la GTK, envoyée par le point d’accès lors du message~3 du 4-Way Handshake. Contrairement à la PTK, qui est propre à une paire client–AP, la GTK est partagée entre tous les clients d’un même réseau et sert au chiffrement des trames multicast et broadcast. Sa transmission protégée par la KEK garantit qu’un attaquant passif ne peut pas l’intercepter, tandis que son renouvellement régulier limite les risques de compromission en cas d’écoute prolongée.
+
+Ainsi, le 4-Way Handshake ne se réduit pas à un simple échange de valeurs nonces, mais constitue un véritable protocole d’initialisation cryptographique. Il assure simultanément la preuve de possession du secret initial, la dérivation de clés fraîches, l’établissement d’un canal chiffré sécurisé et la synchronisation des compteurs de trames. L’ensemble du mécanisme repose sur des propriétés formelles destinées à garantir la confidentialité et l’intégrité des échanges, tout en minimisant les risques liés à la réutilisation ou à la dérivation incorrecte des clés.
 
 \begin{figure}[H]
 \centering
