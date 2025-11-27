@@ -1,0 +1,8 @@
+services:
+  latex-builder:
+    image: blang/latex:ctanfull
+    container_name: latex-builder
+    working_dir: /docs
+    volumes:
+      - ./:/docs
+    command: latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
