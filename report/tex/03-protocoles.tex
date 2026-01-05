@@ -3,6 +3,12 @@
 
 La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis WEP en 1997 jusqu'à WPA3 en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
 
+\subsection{Principe général du Wi-Fi}
+
+Le Wi-Fi, ou norme IEEE 802.11, désigne un ensemble de standards pour les réseaux locaux sans fil (WLAN) permettant la transmission de données numériques par ondes radio (principalement 2,4 GHz, 5 GHz et 6 GHz). Développé à partir des années 1990 par le comité IEEE 802.11 pour répondre à la demande croissante de connectivité mobile sans câblage Ethernet, le premier standard a été publié en 1997, révolutionnant l'accès aux données en éliminant les contraintes physiques des réseaux filaires.
+
+Aujourd'hui, le Wi-Fi est omniprésent : hotspots publics (cafés, aéroports, transports), entreprises, foyers. Avec Wi-Fi 7 (802.11be, 2024) et au-delà, il supporte des débits >46 Gbit/s.
+
 \subsection*{Définitions générales Wi-Fi}
 
 Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{SSID} (\textit{Service Set Identifier}) correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{BSSID}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{AP} (\textit{Access Point}) désigne ce même point d’accès, tandis que la \textbf{STA} (station) représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté.
@@ -37,11 +43,35 @@ Enfin, plusieurs notions cryptographiques apparaissent régulièrement dans ce c
 
 Ces notions constituent le socle indispensable à la compréhension des protocoles de sécurisation Wi-Fi et des vulnérabilités qu’ils cherchent à prévenir.
 
+\subsection*{Modes de mise en réseau}
+
+Le Wi-Fi supporte plusieurs modes de mise en réseau, adaptés à des usages variés.
+
+\paragraph{Mode Infrastructure}
+
+Ce mode connecte les stations (STA) via un ou plusieurs points d'accès (AP) qui agissent comme des concentrateurs. Initialement utilisé en entreprise pour poser des bornes à intervalles réguliers, il nécessite un SSID commun pour la communication. L'avantage principal est le contrôle centralisé des accès : passage obligatoire par l'AP. Aujourd'hui, les routeurs fournis par les FAI aux particuliers fonctionnent en mode infrastructure, faciles à configurer.
+
+\paragraph{Mode Ad hoc}
+
+Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un SSID, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique (OLSR, AODV) étendent la portée en mode maillé, où chaque nœud route pour les autres.
+
+\paragraph{Mode Pont (Bridge)}
+
+Un AP en mode pont relie d'autres AP pour étendre un réseau filaire (ex. : entre bâtiments) au niveau couche 2 OSI. Un AP racine distribue l'accès Internet, les autres se connectent en mode bridge et peuvent accueillir des clients comme en infrastructure.
+
+\paragraph{Mode Répéteur (Range-extender)}
+
+Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). L'interface Ethernet reste inactive, mais chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne).
+
+Ces modes fondamentaux conditionnent les mécanismes de sécurité analysés dans la suite, particulièrement en mode infrastructure dominant.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % WEP
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{WEP : Wired Equivalent Privacy}
+
+\subsection{Sécurité Wi-Fi}
+
+\subsubsection{WEP : Wired Equivalent Privacy}
 
 WEP (1997) constitue la première tentative de sécuriser les communications Wi-Fi. Il a été conçu à une époque où la cryptographie grand public était encore émergente, et souffre aujourd'hui de nombreuses limitations structurelles. Son objectif était de fournir une confidentialité comparable à celle d'un réseau filaire, mais son architecture s'est révélée profondément vulnérable.
 
@@ -49,7 +79,7 @@ WEP (1997) constitue la première tentative de sécuriser les communications Wi-
 
 WEP repose sur l'algorithme de chiffrement par flot RC4. Le mécanisme de chiffrement est simple :
 \begin{itemize}
-    \item une clé secrète partagée statique (40 ou 104 bits) ;
+    \item une clé secrète partagée statique, nommée SharedKey (40 ou 104 bits) ;
     \item un vecteur d'initialisation (IV) de 24 bits, envoyé en clair ;
     \item concaténation \texttt{IV || clé} comme entrée de RC4 ;
     \item un ICV (Integrity Check Value) calculé via CRC-32, ajouté au plaintext avant chiffrement.
@@ -60,18 +90,20 @@ Le chiffrement d'un paquet se fait ainsi :
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[node distance=2cm]
-\node[draw, rounded corners, inner sep=3pt] (pt) {Plaintext + CRC-32};
-\node[draw, rounded corners, right=of pt, inner sep=3pt] (iv) {IV (24 bits)};
-\node[draw, rounded corners, below=of iv, inner sep=3pt] (rc4) {RC4 KSA/PRGA};
-\node[draw, rounded corners, right=of rc4, inner sep=3pt] (ks) {Keystream};
-\node[draw, rounded corners, right=of pt, yshift=-10mm, inner sep=3pt] (xor) {XOR};
-\node[draw, rounded corners, right=of xor, inner sep=3pt] (ct) {Ciphertext};
+\node[draw, rounded corners, inner sep=3pt] (in) {Input};
+\node[draw, rounded corners, right=of in, inner sep=3pt] (pt) {Plaintext + ICV};
+\node[draw, rounded corners, right=of pt, inner sep=3pt] (xor) {XOR};
+\node[draw, rounded corners, below=of xor, inner sep=3pt] (rc4) {RC4};
+\node[draw, rounded corners, left=of rc4, inner sep=3pt] (sk) {IV + SharedKey};
+\node[draw, rounded corners, right=of rc4, inner sep=3pt] (ct) {IV + Ciphertext};
+\node[draw, rounded corners, right=of ct, inner sep=3pt] (out) {Output};
 
+\draw[->] (in) -- (pt);
 \draw[->] (pt) -- (xor);
-\draw[->] (iv) -- (rc4);
-\draw[->] (rc4) -- (ks);
-\draw[->] (ks) -- (xor);
+\draw[->] (rc4) -- (xor);
 \draw[->] (xor) -- (ct);
+\draw[->] (sk) -- (rc4);
+\draw[->] (ct) -- (out);
 
 \end{tikzpicture}
 \caption{Principe du chiffrement WEP}
@@ -126,12 +158,29 @@ Le chiffrement d'un paquet se fait ainsi :
 
 \paragraph{Faiblesses cryptographiques majeures}
 
+Le protocole WEP présente des faiblesses structurelles fondamentales :
+
 \begin{itemize}
-    \item IV de 24 bits : collisions quasi certaines en quelques minutes.
-    \item Pas de renouvellement de clé : longue exposition.
+    \item \textbf{IV de 24 bits (16\,777\,216 valeurs possibles)} : chaque trame WEP transmet son vecteur d'initialisation en clair. Avec un trafic normal, les collisions d'IV surviennent en quelques minutes (souvent moins de 5 minutes pour un AP actif). Un attaquant peut alors combiner deux trames avec le même IV+clé pour annuler le keystream par XOR.
+    
+    \item \textbf{Aucun renouvellement de clé} : la clé secrète reste statique pendant des semaines/mois. Un IV réutilisé expose la même clé RC4 pendant toute la durée de vie de la clé, permettant une attaque par collecte massive de trames.
+
+    \item \textbf{ICV trop faible} : L’ICV étant un simple CRC-32 linéaire, il est possible de modifier des trames chiffrées sans connaître la clé, en recalculant un ICV valide.
 \end{itemize}
 
-Ces vulnérabilités rendent WEP totalement compromis : casser une clé WEP prend moins d'une minute dans des conditions favorables.
+\vspace{0.3cm}
+
+Pour mieux comprendre le problème majeur de la taille de l'IV, nous allons prendre comme exemple : un IV est utilisé 2 fois $IV_0$, et deux messages combinsé (payload | ICV) $M_1$ et $M_2$.
+
+\begin{enumerate}
+    \item $IV_0$ -> $RC4(IV_0||SharedKey) \oplus M_1 = C_1$
+    \item $IV_0$ -> $RC4(IV_0||SharedKey) \oplus M_2 = C_2$
+    \item $C_1 \oplus C_2 = M_1 \oplus M_2$
+    \item Headers IP (IP/TCP standardardisé) connus de $M_1$ -> $M_2$ instantané
+\end{enumerate}
+
+En pratique, avec Aircrack NG, William Arbaugh note qu'il existe 50 \% de risque de collision après 4 823 paquets.
+La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,000 IVs pour des clés de 128 bit.
 
 \newpage
 
@@ -152,7 +201,163 @@ WPA introduit plusieurs mécanismes :
     \item une rotation des clés fréquente.
 \end{itemize}
 
+\subsubsection*{Phases de WPA}
+
+Le protocole de WPA est divisé en 3 phases.
+
+\begin{itemize}
+    \item \textbf{Phase 1 (PBKDF2 4096 itérations)} : passphrase -> PMK résistante dictionnaire (impossible bruteforce hors ligne contrairement à WEP).
+    
+    \item \textbf{Phase 2 (4-Way Handshake)} : PMK -> PTK échangée sans jamais transmettre la clé (ANonce/SNonce + MIC protègent). Clés éphémères.
+    
+    \item \textbf{Phase 3 (TKIP par trame)} : 
+    \begin{itemize}
+        \item TSC 48 bits (vs IV 24b WEP)
+        \item MIC (Michael) -> intégrité (vs CRC-32 faible)
+        \item RC4 + TSC -> keystream unique par trame
+    \end{itemize}
+\end{itemize}
+
+\subsubsection*{Fonctionnement interne (3 phases)}
+
+WPA corrige WEP par 3 étapes distinctes :
+
+\begin{figure}[H]
+\centering
+% Schéma 1 : Phase 1
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
+]
+\node[box] (psk) {Pre Shared Key\\passphrase};
+\node[box, right=1.8cm of psk] (pbkdf2) {PBKDF2\\Dérivation de clé};
+\node[box, right=1.8cm of pbkdf2] (pmk) {Pairwise Master Key\\(256 bits)};
+\node[font=\small\bfseries, above=0.1cm of pbkdf2] {Phase 1 : Sécurisation de la clé};
+
+\draw[->] (psk) -- (pbkdf2);
+\draw[->] (pbkdf2) -- (pmk);
+\end{tikzpicture}
+
+
+\par\vspace{0.3cm}
+% Schéma 2 : Phase 2  
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
+]
+\node[box] (pmk2) {PMK};
+\node[box, right=1.8cm of pmk2] (handshake) {4-Way Handshake\\(décrit ensuite)};
+\node[box, right=1.8cm of handshake] (ptk) {Pairwise Transient Key\\(512 bits)};
+\node[font=\small\bfseries, above=0.1cm of handshake] {Phase 2 : Création d'une clé unique en AP et STA};
+
+\draw[->] (pmk2) -- (handshake);
+\draw[->] (handshake) -- (ptk);
+\end{tikzpicture}
+
+\par\vspace{0.3cm}
+
+% Schéma 3 : Phase 3
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=2.4cm, minimum height=0.9cm, align=center},
+    smallbox/.style={draw, rounded corners, minimum width=2.2cm, minimum height=0.8cm, align=center, font=\footnotesize}
+]
+
+% Clés
+\node[box] (ptk) {PTK};
+\node[smallbox, below=0.9cm of ptk] (tk) {TK\\(Temporal Key)};
+\node[smallbox, left=1.2cm of tk] (mic) {MIC Key\\Intégrité et rejeu};
+
+% Données
+\node[box, below=1.2cm of mic] (pt) {Plaintext};
+\node[box, right=1.2cm of tk] (tsc) {TSC\\Sequence Counter};
+\node[box, right=1.2cm of pt] (rc4) {RC4\\Keystream};
+\node[box, right=1.2cm of rc4] (ct) {Ciphertext};
+
+\node[font=\small\bfseries, above=0.2cm of ptk] {Phase 3 : Chiffrement TKIP par trame};
+
+% Liens clés
+\draw[->] (ptk) -- (tk);
+\draw[->] (ptk) -- (mic);
+
+% Calcul MIC
+\draw[->] (pt) -- node[left, font=\footnotesize]{MIC} (mic);
+
+% Génération du keystream
+\draw[->] (tk) -- (rc4);
+\draw[->] (tsc) -- (rc4);
+
+% Chiffrement
+\draw[->, dashed] (pt) -- (rc4);
+\draw[->] (rc4) -- (ct);
+
+\end{tikzpicture}
+\caption{Phase 3 WPA/TKIP : utilisation de la PTK (TK et MIC Key) pour le chiffrement par trame}
+\label{fig:wpa_phases}
+\end{figure}
+
 Bien que RC4 soit toujours utilisé, WPA réduit significativement les risques d'attaque sans néanmoins les éliminer.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 4-Way Handshake
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection*{Le 4-Way Handshake}
+
+Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
+
+\begin{itemize}
+    \item \textbf{Preuve mutuelle PMK} : STA et AP prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
+    
+    \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast STA <-> AP, dérivée de : $PTK = PRF(PMK, SSID, min(ANonce,SNonce) || max(ANonce,SNonce))$.
+    
+    \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'AP l'envoie chiffrée avec la PTK du client.
+\end{itemize}
+
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex]
+
+\node (sta) at (0,0) {Client (STA)};
+\node (ap)  at (6,0) {Point d'accès (AP)};
+
+% Lignes de vie
+\draw (sta.south) -- ++(0,-6.5);
+\draw (ap.south)  -- ++(0,-6.5);
+
+% Messages
+\draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. ANonce} ++(-6,0);
+\draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. SNonce + MIC} ++(6,0);
+\draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
+\draw[->] (sta.south)++(0,-5) -- node[above,sloped]{4. Confirmation} ++(6,0);
+
+% Étapes locales STA (à gauche)
+\node[anchor=east, align=right, font=\footnotesize] 
+  at (-0.2,-1.5) {%
+  Dérivation de la PTK\\
+  Calcul du MIC
+};
+
+\node[anchor=east, align=right, font=\footnotesize] 
+  at (-0.2,-4.5) {%
+  Vérification du MIC\\
+  Installation de la PTK et GTK
+};
+
+% Étapes locales AP (à droite)
+\node[anchor=west, align=left, font=\footnotesize] 
+  at (6.2,-3) {%
+  Vérification du MIC\\
+  Dérivation de la PTK\\
+  Génération de la GTK
+};
+
+\node[anchor=west, align=left, font=\footnotesize] 
+  at (6.2,-6.0) {%
+  Installation de la PTK et GTK
+};
+
+\end{tikzpicture}
+\caption{4-Way Handshake WPA/WPA2}
+\label{fig:4way}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % WPA2
@@ -166,38 +371,6 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
     \item \textbf{WPA2-PSK} : la PMK (\textit{Pairwise Master Key} : clé maitresse) = PBKDF2(\textit{Password-Based Key Derivation Function 2} : basée sur une passphrase et le SSID).
     \item \textbf{WPA2-Enterprise} : PMK fournie via un serveur RADIUS et une authentification EAP.
 \end{itemize}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 4-Way Handshake
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection*{Le 4-Way Handshake}
-
-Le handshake assure :
-\begin{itemize}
-    \item la preuve de possession mutuelle de la PMK ;
-    \item la génération de la PTK (\textit{Pairwise Transient Key}) ;
-    \item la distribution de la GTK (\textit{Group Temporal Key}).
-\end{itemize}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[>=latex]
-
-\node (sta) at (0,0) {Client (STA)};
-\node (ap)  at (6,0) {Point d'accès (AP)};
-
-\draw (sta.south) -- ++(0,-4.5);
-\draw (ap.south)  -- ++(0,-4.5);
-
-\draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. ANonce} ++(-6,0);
-\draw[->] (sta.south)++(0,-1.5) -- node[above,sloped]{2. SNonce + MIC} ++(6,0);
-\draw[->] (ap.south)++(0,-2.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
-\draw[->] (sta.south)++(0,-3.5) -- node[above,sloped]{4. Confirmation} ++(6,0);
-
-\end{tikzpicture}
-\caption{4-Way Handshake WPA/WPA2}
-\label{fig:4way}
-\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PMK -> PTK -> GTK derivation
@@ -228,7 +401,7 @@ Ainsi, le 4-Way Handshake ne se réduit pas à un simple échange de valeurs non
 \draw[->] (ptk.east) -- node[above]{KEK} (gtk.west);
 
 \end{tikzpicture}
-\caption{Dérivation cryptographique PMK $\rightarrow$ PTK $\rightarrow$ GTK}
+\caption{Dérivation cryptographique PMK $->$ PTK $->$ GTK}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
