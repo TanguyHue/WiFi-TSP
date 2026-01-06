@@ -267,177 +267,256 @@ La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,00
 \subsubsection{WPA : Wi-Fi Protected Access}
 
 Face à la crise WEP, la Wi-Fi Alliance introduit en 2003 \acrshort{wpa} comme correctif transitoire, visant à remplacer les composants vulnérables tout en conservant le matériel existant (compatibilité ascendante).
+WPA s'appuie sur un problème de chiffrement nommé \acrfull{tkip}.
 
 \subsubsection*{Fonctionnement interne}
 
 WPA introduit plusieurs mécanismes :
 \begin{itemize}
     \item un mélange de clés élaboré (phase 1 et phase 2) ;
+    \item un \acrlong{iv} de taille doublée (24 à 48 bits) ; 
     \item un \acrfull{tsc} pour de l'anti-replay ;
-    \item un \acrfull{mic} pour de l'intégrité ;
+    \item un \acrfull{mic} pour de l'intégrité et de la signature ;
     \item une rotation des clés fréquente.
 \end{itemize}
 
 \subsubsection*{Phases de WPA}
 
-Le protocole de WPA est divisé en 3 phases.
-
-\begin{itemize}
-    \item \textbf{Phase 1 (\acrshort{pbkdf2} 4096 itérations)} : passphrase $\rightarrow$ PMK résistante dictionnaire (impossible bruteforce hors ligne contrairement à WEP).
-    
-    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrshort{mic} protègent). Clés éphémères.
-    
-    \item \textbf{Phase 3 (\acrshort{tkip} par trame)} : 
-    \begin{itemize}
-        \item TSC 48 bits (vs IV 24b WEP)
-        \item MIC (Michael) $\rightarrow$ intégrité (vs CRC-32 faible)
-        \item RC4 + TSC $\rightarrow$ keystream unique par trame
-    \end{itemize}
-\end{itemize}
-
-\clearpage
-
-\subsubsection*{Fonctionnement interne (3 phases)}
+Le protocole s'appuie sur une clé connue par les \acrshort{sta} et l\acrshort{ap}, nommée \acrfull{psk}. Il peut également, dans le cadre de \textit{WPA-Enterprise}, être généré via un serveur RADIUS.
+Ici, nous ne développerons que la méthode avec une passphrase connue par les deux parties.
 
 WPA corrige WEP par 3 étapes distinctes :
 
-\begin{figure}[H]
-\centering
-% Schéma 1 : Phase 1
-\begin{tikzpicture}[
-    box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
-]
-\node[box] (psk) {\acrlong{psk}\\passphrase};
-\node[box, right=1.8cm of psk] (pbkdf2) {PBKDF2\\Dérivation de clé};
-\node[box, right=1.8cm of pbkdf2] (pmk) {Pairwise Master Key\\(256 bits)};
-\node[font=\small\bfseries, above=0.1cm of pbkdf2] {Phase 1 : Sécurisation de la clé};
-
-\draw[->] (psk) -- (pbkdf2);
-\draw[->] (pbkdf2) -- (pmk);
-\end{tikzpicture}
-
-
-\par\vspace{0.3cm}
-% Schéma 2 : Phase 2  
-\begin{tikzpicture}[
-    box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
-]
-\node[box] (pmk2) {PMK};
-\node[box, right=1.8cm of pmk2] (handshake) {4-Way Handshake\\(décrit ensuite)};
-\node[box, right=1.8cm of handshake] (ptk) {Pairwise Transient Key\\(512 bits)};
-\node[font=\small\bfseries, above=0.1cm of handshake] {Phase 2 : Création d'une clé unique en \acrshort{ap} et \acrshort{sta}};
-
-\draw[->] (pmk2) -- (handshake);
-\draw[->] (handshake) -- (ptk);
-\end{tikzpicture}
-
-\par\vspace{0.3cm}
-
-% Schéma 3 : Phase 3
-\begin{tikzpicture}[
-    box/.style={draw, rounded corners, minimum width=2.4cm, minimum height=0.9cm, align=center},
-    smallbox/.style={draw, rounded corners, minimum width=2.2cm, minimum height=0.8cm, align=center, font=\footnotesize}
-]
-
-% Clés
-\node[box] (ptk) {PTK};
-\node[smallbox, below=0.9cm of ptk] (tk) {TK\\(Temporal Key)};
-\node[smallbox, left=1.2cm of tk] (mic) {MIC Key\\Intégrité et rejeu};
-
-% Données
-\node[box, below=1.2cm of mic] (pt) {Plaintext};
-\node[box, right=1.2cm of tk] (tsc) {TSC\\Sequence Counter};
-\node[box, below=1.2cm of tk] (rc4) {RC4\\Keystream};
-\node[box, below=1.2cm of tsc] (ct) {Ciphertext};
-
-\node[font=\small\bfseries, above=0.2cm of ptk] {Phase 3 : Chiffrement TKIP par trame};
-
-% Liens clés
-\draw[->] (ptk) -- (tk);
-\draw[->] (ptk) -- (mic);
-
-% Calcul MIC
-\draw[->] (pt) -- node[left, font=\footnotesize]{MIC} (mic);
-
-% Génération du keystream
-\draw[->] (tk) -- (rc4);
-\draw[->] (tsc) -- (rc4);
-
-% Chiffrement
-\draw[->, dashed] (pt) -- (rc4);
-\draw[->] (rc4) -- (ct);
-
-\end{tikzpicture}
-\caption{Phase 3 WPA/TKIP : utilisation de la PTK (TK et MIC Key) pour le chiffrement par trame}
-\label{fig:wpa_phases}
-\end{figure}
-
-Bien que RC4 soit toujours utilisé, WPA réduit significativement les risques d'attaque sans néanmoins les éliminer.
-
-
-% 4-Way Handshake
-
-\subsubsection*{Le 4-Way Handshake}
-
-Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
-
 \begin{itemize}
-    \item \textbf{Preuve mutuelle PMK} : \acrshort{sta} et \acrshort{ap} prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
+    \item \textbf{Phase 1 (\acrshort{pbkdf2} 4096 itérations)} : passphrase $\rightarrow$ \acrfull{pmk} résistante plus robuste. Cette clé n'est jamais utilisée directement, elle ne sert qu'à générer une clé temporaire.\\La fonction PBKDF2 utilise le SSID comme sel cryptographique et applique 4096 itérations de HMAC-SHA1. Ce mécanisme ralentit volontairement les tentatives de brute force, mais n'empêche pas les attaques hors ligne si la passphrase est faible et que le 4-Way Handshake est capturé.
+
+
+    \begin{figure}[H]
+        \centering
+        % Schéma 1 : Phase 1
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
+        ]
+        \node[box] (psk) {\acrlong{psk}\\passphrase};
+        \node[box, right=1.8cm of psk] (pbkdf2) {PBKDF2\\Dérivation de clé};
+        \node[box, right=1.8cm of pbkdf2] (pmk) {Pairwise Master Key\\(256 bits)};
+
+        \draw[->] (psk) -- (pbkdf2);
+        \draw[->] (pbkdf2) -- (pmk);
+        \end{tikzpicture}
+        \caption{Phase 1 : Sécurisation de la clé}
+        \label{fig:wpa_phase_1}
+    \end{figure}
+
     
-    \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast \acrshort{sta} $\leftrightarrow$ \acrshort{ap}, dérivée de : $PTK = PRF(PMK, SSID, min(\Gls{anonce},\Gls{snonce}) || max(\Gls{anonce},\Gls{snonce}))$.
+    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrshort{mic} protègent).
+    \\Les nonces (\Gls{anonce} et \Gls{snonce}) garantissent l'unicité de la PTK à chaque association, même si la PMK reste identique. Le \acrshort{mic}, calculé à l'aide de la clé KCK, assure l'intégrité et l'authenticité des messages du handshake.
+
     
-    \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'\acrshort{ap} l'envoie chiffrée avec la PTK du client.
+    \begin{figure}[H]
+        \centering
+        % Schéma 2 : Phase 2  
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
+        ]
+        \node[box] (pmk2) {PMK};
+        \node[box, right=1.8cm of pmk2] (handshake) {4-Way Handshake};
+        \node[box, right=1.8cm of handshake] (ptk) {Pairwise Transient Key\\512 bits};
+
+        \draw[->] (pmk2) -- (handshake);
+        \draw[->] (handshake) -- (ptk);
+        \end{tikzpicture}
+        \caption{Phase 2 : Création d'une clé unique en \acrshort{ap} et \acrshort{sta}}
+        \label{fig:wpa_phase_2}
+    \end{figure}
+
+    % 4-Way Handshake
+    Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
+
+    \begin{itemize}
+        \item \textbf{Preuve mutuelle PMK} : \acrshort{sta} et \acrshort{ap} prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
+        
+        \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast \acrshort{sta} $\leftrightarrow$ \acrshort{ap}, dérivée de : 
+        \[
+            \begin{aligned}
+            PTK = PRF(&PMK, \\
+                    &\min(MAC_{AP}, MAC_{STA}) \, || \, \max(MAC_{AP}, MAC_{STA}) \, || \\
+                    &\min(\Gls{anonce}, \Gls{snonce}) \, || \, \max(\Gls{anonce}, \Gls{snonce})
+            )
+            \end{aligned}
+        \].
+        
+        \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'\acrshort{ap} l'envoie chiffrée avec la PTK du client.
+    \end{itemize}
+
+    \begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[>=latex]
+
+    \node (sta) at (0,0) {Client (\acrshort{sta})};
+    \node (ap)  at (6,0) {Point d'accès (\acrshort{ap})};
+
+    % Lignes de vie
+    \draw (sta.south) -- ++(0,-6.5);
+    \draw (ap.south)  -- ++(0,-6.5);
+
+    % Messages
+    \draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. \Gls{anonce}} ++(-6,0);
+    \draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. \Gls{snonce} + MIC} ++(6,0);
+    \draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
+    \draw[->] (sta.south)++(0,-5) -- node[above,sloped]{4. Confirmation} ++(6,0);
+
+    % Étapes locales STA (à gauche)
+    \node[anchor=east, align=right, font=\footnotesize] 
+    at (-0.2,-1.5) {%
+    Dérivation de la PTK\\
+    Calcul du MIC
+    };
+
+    \node[anchor=east, align=right, font=\footnotesize] 
+    at (-0.2,-4.5) {%
+    Vérification du MIC\\
+    Installation de la PTK et GTK
+    };
+
+    % Étapes locales AP (à droite)
+    \node[anchor=west, align=left, font=\footnotesize] 
+    at (6.2,-3) {%
+    Vérification du MIC\\
+    Dérivation de la PTK\\
+    Génération de la GTK
+    };
+
+    \node[anchor=west, align=left, font=\footnotesize] 
+    at (6.2,-6.0) {%
+    Installation de la PTK et GTK
+    };
+
+    \end{tikzpicture}
+    \caption{4-Way Handshake WPA/WPA2}
+    \label{fig:4way}
+    \end{figure}
+
+    La \textit{Pairwise Transient Key} (PTK) est en pratique un trousseau de sous-clés spécialisées : la KCK est utilisée pour l’authentification et la protection des messages du 4-Way Handshake, la KEK pour chiffrer et distribuer la clé de groupe GTK, et la TK pour chiffrer le trafic de données unicast entre la STA et le point d’accès.
+
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners, minimum width=2.4cm, minimum height=0.9cm, align=center},
+            smallbox/.style={draw, rounded corners, minimum width=2.2cm, minimum height=0.8cm, align=center, font=\footnotesize}
+        ]
+
+        \node[box] (ptk) {PTK\\(512 bits)};
+
+        \node[smallbox, below=1.2cm of ptk] (kek) {\acrfull{kek}\\128 bits};
+        \node[smallbox, left=0.2cm of kek] (kck) {\acrfull{kck}\\128 bits};
+        \node[smallbox, right=0.2cm of kek] (tk) {\acrlong{tk}\\256 bits};
+
+        \draw[->] (ptk) -- (kck);
+        \draw[->] (ptk) -- (kek);
+        \draw[->] (ptk) -- (tk);
+        \end{tikzpicture}
+        \caption{Décomposition de la PTK en sous-clés KCK, KEK et TK.}
+        \label{fig:ptk-subkeys}
+    \end{figure}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|l|l|l|l|}
+        \hline
+        \textbf{Clé} &
+        \textbf{Taille} &
+        \textbf{Usage} &
+        \textbf{Phase} &
+        \textbf{Renouvellement} \\
+        \hline
+        PSK &
+        Variable &
+        Passphrase partagée &
+        Pré-Phase &
+        Manuel \\
+
+        PMK &
+        256 bits &
+        Clé maître dérivée (PBKDF2) &
+        Phase 1 &
+        À chaque authentification \\
+
+        PTK &
+        512 bits &
+        Clé transitoire unicast &
+        Phase 2 &
+        À chaque 4-Way Handshake \\
+
+        KCK &
+        128 bits &
+        Intégrité du handshake (MIC) &
+        Phase 2 &
+        À chaque 4-Way Handshake \\
+
+        KEK &
+        128 bits &
+        Chiffrement de la GTK &
+        Phase 2 &
+        À chaque 4-Way Handshake \\
+
+        TK &
+        256 bits &
+        Chiffrement des données unicast &
+        Phase 3 & Clé par paquet (via TSC) \\
+
+        GTK &
+        128 bits &
+        Trafic broadcast/multicast &
+        Phase 2 &
+        Périodique / Reconnexion \\
+        \hline
+        \end{tabular}
+        \caption{Récapitulatif des clés utilisées dans WPA-TKIP}
+        \label{tab:wpa_keys}
+    \end{table}
+
+    \item \textbf{Phase 3 (TKIP par trame)} : une fois les clés installées, chaque trame de données est chiffrée indépendamment à l'aide de TKIP. 
+        Contrairement à WEP, une clé unique est générée pour chaque paquet.
+
+        Pour chaque trame, les éléments suivants sont utilisés :
+        \begin{itemize}
+            \item la clé temporaire TK ;
+            \item l'adresse MAC de l'émetteur ;
+            \item le \acrfull{tsc} (compteur anti-rejeu de 48 bits).
+        \end{itemize}
+
+        TKIP applique un \textbf{mélange de clés en deux phases} :
+        \begin{itemize}
+            \item \textbf{Phase 1} : combine la TK, la MAC source et les 32 bits de poids fort du TSC pour produire une clé intermédiaire ;
+            \item \textbf{Phase 2} : intègre les 16 bits de poids faible du TSC afin de générer la clé RC4 finale spécifique au paquet.
+        \end{itemize}
+
+        Un \acrshort{mic} (Michael) est ensuite calculé sur les données en clair avant chiffrement, 
+        puis l'ensemble est chiffré à l'aide de RC4 et transmis.
+
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners, minimum width=2.6cm, minimum height=0.9cm, align=center}
+        ]
+        \node[box] (data) {Données claires};
+        \node[box, below=0.8cm of data] (mic) {Calcul MIC};
+        \node[box, below=0.8cm of mic] (mix) {Key Mixing TKIP};
+        \node[box, below=0.8cm of mix] (rc4) {Chiffrement RC4};
+        \node[box, below=0.8cm of rc4] (frame) {Trame Wi-Fi chiffrée};
+
+        \draw[->] (data) -- (mic);
+        \draw[->] (mic) -- (mix);
+        \draw[->] (mix) -- (rc4);
+        \draw[->] (rc4) -- (frame);
+        \end{tikzpicture}
+        \caption{Chiffrement d'une trame WPA-TKIP}
+        \label{fig:wpa_tkip_frame}
+        \end{figure}
 \end{itemize}
 
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[>=latex]
-
-\node (sta) at (0,0) {Client (\acrshort{sta})};
-\node (ap)  at (6,0) {Point d'accès (\acrshort{ap})};
-
-% Lignes de vie
-\draw (sta.south) -- ++(0,-6.5);
-\draw (ap.south)  -- ++(0,-6.5);
-
-% Messages
-\draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. \Gls{anonce}} ++(-6,0);
-\draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. \Gls{snonce} + MIC} ++(6,0);
-\draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
-\draw[->] (sta.south)++(0,-5) -- node[above,sloped]{4. Confirmation} ++(6,0);
-
-% Étapes locales STA (à gauche)
-\node[anchor=east, align=right, font=\footnotesize] 
-  at (-0.2,-1.5) {%
-  Dérivation de la PTK\\
-  Calcul du MIC
-};
-
-\node[anchor=east, align=right, font=\footnotesize] 
-  at (-0.2,-4.5) {%
-  Vérification du MIC\\
-  Installation de la PTK et GTK
-};
-
-% Étapes locales AP (à droite)
-\node[anchor=west, align=left, font=\footnotesize] 
-  at (6.2,-3) {%
-  Vérification du MIC\\
-  Dérivation de la PTK\\
-  Génération de la GTK
-};
-
-\node[anchor=west, align=left, font=\footnotesize] 
-  at (6.2,-6.0) {%
-  Installation de la PTK et GTK
-};
-
-\end{tikzpicture}
-\caption{4-Way Handshake WPA/WPA2}
-\label{fig:4way}
-\end{figure}
-
+Bien que RC4 soit toujours utilisé, WPA réduit significativement les risques d'attaque sans néanmoins les éliminer.
 
 % WPA2
 
