@@ -36,7 +36,8 @@ jobs:
         with:
           tag: "v1.0.${{ github.run_number }}"
           name: "Release v1.0.${{ github.run_number }}"
-          body: "Automated PDF release"
+          body: "Génération rapport"
+          bodyFile: report/main.pdf
           artifacts: report/main.pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
