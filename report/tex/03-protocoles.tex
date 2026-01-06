@@ -1,7 +1,7 @@
 \section{Fonctionnement des Protocoles Wi-Fi}
 \label{sec:protocoles}
 
-La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis WEP en 1997 jusqu'à WPA3 en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
+La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis \acrshort{wep} en 1997 jusqu'à \acrshort{wpa3} en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
 
 \subsection{Principe général du Wi-Fi}
 
@@ -11,78 +11,159 @@ Aujourd'hui, le Wi-Fi est omniprésent : hotspots publics (cafés, aéroports, t
 
 \subsection*{Définitions générales Wi-Fi}
 
-Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{SSID} (\textit{Service Set Identifier}) correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{BSSID}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{AP} (\textit{Access Point}) désigne ce même point d’accès, tandis que la \textbf{STA} (station) représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté.
+Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{\acrfull{ssid}} correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{\acrfull{bssid}}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{\acrfull{ap}} désigne ce même point d’accès, tandis que la \textbf{\acrfull{sta}} représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté.
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[>=latex, node distance=3cm]
 
 % AP au centre
-\node[draw, rounded corners, align=center, inner sep=4pt] (ap) {Point d'accès (AP)\\[2pt]
+\node[draw, rounded corners, align=center, inner sep=4pt] (ap) {\acrfull{ap}\\[2pt]
 \textbf{SSID} : \texttt{LabWiFi}\\
 \textbf{BSSID} : \texttt{00:11:22:33:44:55}};
 
 % Stations autour
-\node[draw, rounded corners, left=of ap, align=center, inner sep=4pt] (sta1) {Station 1 (STA)\\PC portable};
-\node[draw, rounded corners, right=of ap, align=center, inner sep=4pt] (sta2) {Station 2 (STA)\\Smartphone};
-\node[draw, rounded corners, below=of ap, align=center, inner sep=4pt] (sta3) {Station 3 (STA)\\IoT / Objet connecté};
+\node[draw, rounded corners, left=of ap, align=center, inner sep=4pt] (sta1) {Station 1 (\acrshort{sta})\\PC portable};
+\node[draw, rounded corners, right=of ap, align=center, inner sep=4pt] (sta2) {Station 2 (\acrshort{sta})\\Smartphone};
+\node[draw, rounded corners, below=of ap, align=center, inner sep=4pt] (sta3) {Station 3 (\acrshort{sta})\\IoT / Objet connecté};
 
 % Liens
-\draw[<->] (ap) -- node[above]{Trames 802.11} (sta1);
-\draw[<->] (ap) -- node[above]{Trames 802.11} (sta2);
-\draw[<->] (ap) -- node[right]{Trames 802.11} (sta3);
+\draw[<->] (ap) -- node[above]{Trames} (sta1);
+\draw[<->] (ap) -- node[above]{Trames} (sta2);
+\draw[<->] (ap) -- node[right]{Trames} (sta3);
 
 \end{tikzpicture}
-\caption{Illustration des notions AP, STA, SSID et BSSID dans un réseau Wi-Fi}
+\caption{Illustration des notions \acrshort{ap}, \acrshort{sta}, \acrshort{ssid} et \acrshort{bssid} dans un réseau Wi-Fi}
 \label{fig:ap_sta_ssid_bssid}
 \end{figure}
 
-Les communications Wi-Fi reposent sur des trames qui circulent au niveau de la couche MAC du modèle 802.11. On distingue notamment les trames de \textit{gestion}, essentielles pour l’association, l’authentification ou la déconnexion ; les trames de \textit{contrôle}, destinées à réguler l’accès au médium ; et les trames de \textit{données}, qui transportent l’information utilisateur ou les paquets réseau encapsulés. La plupart des attaques Wi-Fi tirent parti de la possibilité d’observer, d’injecter ou de manipuler ces différentes catégories de trames.
+Les communications Wi-Fi reposent sur des \glspl{trame} qui circulent au niveau de la couche MAC du modèle 802.11. On distingue notamment les trames de \textit{gestion}, essentielles pour l’association, l’authentification ou la déconnexion ; les trames de \textit{contrôle}, destinées à réguler l’accès au médium ; et les trames de \textit{données}, qui transportent l’information utilisateur ou les paquets réseau encapsulés. La plupart des attaques Wi-Fi tirent parti de la possibilité d’observer, d’injecter ou de manipuler ces différentes catégories de trames.
 
-Enfin, plusieurs notions cryptographiques apparaissent régulièrement dans ce chapitre. La \textbf{PMK} (\textit{Pairwise Master Key}) constitue le secret partagé à partir duquel toutes les clés de session sont dérivées, tandis que la \textbf{PTK} (\textit{Pairwise Transient Key}) correspond à la clé spécifique à la connexion entre un client et un point d’accès. La \textbf{GTK} (\textit{Group Temporal Key}) est utilisée pour chiffrer le trafic multicast ou broadcast adressé à plusieurs stations. Ces clés sont produites ou échangées dans le cadre de mécanismes tels que le 4-Way Handshake ou les protocoles d’authentification EAP, qui seront détaillés dans les sections suivantes.
+Enfin, plusieurs notions cryptographiques apparaissent régulièrement dans ce chapitre. La \textbf{\acrfull{pmk}} constitue le secret partagé à partir duquel toutes les clés de session sont dérivées, tandis que la \textbf{\acrfull{ptk}} correspond à la clé spécifique à la connexion entre un client et un point d’accès. La \textbf{\acrfull{gtk}} est utilisée pour chiffrer le trafic multicast ou broadcast adressé à plusieurs stations. Ces clés sont produites ou échangées dans le cadre de mécanismes tel que le 4-Way \Gls{handshake}, qui sera détaillé dans les sections suivantes.
 
 Ces notions constituent le socle indispensable à la compréhension des protocoles de sécurisation Wi-Fi et des vulnérabilités qu’ils cherchent à prévenir.
 
-\subsection*{Modes de mise en réseau}
+\subsection*{Modes de mise en réseau \cite{WiFiWik42:online}}
 
 Le Wi-Fi supporte plusieurs modes de mise en réseau, adaptés à des usages variés.
 
 \paragraph{Mode Infrastructure}
 
-Ce mode connecte les stations (STA) via un ou plusieurs points d'accès (AP) qui agissent comme des concentrateurs. Initialement utilisé en entreprise pour poser des bornes à intervalles réguliers, il nécessite un SSID commun pour la communication. L'avantage principal est le contrôle centralisé des accès : passage obligatoire par l'AP. Aujourd'hui, les routeurs fournis par les FAI aux particuliers fonctionnent en mode infrastructure, faciles à configurer.
+Ce mode connecte les stations (\acrshort{sta}) via un ou plusieurs points d'accès (\acrshort{ap}) qui agissent comme des \glspl{concentrateur}. Initialement utilisé en entreprise pour poser des bornes à intervalles réguliers, il nécessite un \acrshort{ssid} commun pour la communication. L'avantage principal est le contrôle centralisé des accès : passage obligatoire par l'\acrshort{ap}. Aujourd'hui, les routeurs fournis par les \acrshort{fai} aux particuliers fonctionnent en mode infrastructure, faciles à configurer.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=1.8cm, minimum height=0.8cm, align=center}
+]
+\node[box] (ap) {AP\\Routeur};
+\node[box, left=2cm of ap] (sta1) {STA 1\\PC};
+\node[box, right=2cm of ap] (sta2) {STA 2\\Phone};
+\node[box, below=1.5cm of ap] (sta3) {STA 3\\IoT};
+\draw[->] (ap) -- (sta1);
+\draw[->] (ap) -- (sta2);
+\draw[->] (ap) -- (sta3);
+\node[font=\small, above=0.2cm of ap] {Mode Infrastructure};
+\end{tikzpicture}
+\caption{Mode Infrastructure : STA $\rightarrow$ AP central $\rightarrow$ Internet}
+\end{figure}
 
 \paragraph{Mode Ad hoc}
 
-Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un SSID, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique (OLSR, AODV) étendent la portée en mode maillé, où chaque nœud route pour les autres.
+Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un \acrshort{ssid}, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique étendent la portée en mode maillé, où chaque nœud route pour les autres.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=1.8cm, minimum height=0.8cm, align=center}
+]
+\node[box] (sta1) {STA 1\\PC};
+\node[box, right=3cm of sta1] (sta2) {STA 2\\Phone};
+\node[box, above right=1.5cm and 1cm of sta2] (sta3) {STA 3\\Laptop};
+\draw[<->, thick] (sta1) -- (sta2);
+\draw[<->, thick] (sta2) -- (sta3);
+\draw[<->, dashed] (sta1) -- (sta3);
+\node[font=\small, below=0.2cm of sta2] {Mode Ad hoc : Direct STA $\leftrightarrow$ STA};
+\end{tikzpicture}
+\caption{Mode Ad hoc : communication directe sans AP}
+\end{figure}
 
 \paragraph{Mode Pont (Bridge)}
 
-Un AP en mode pont relie d'autres AP pour étendre un réseau filaire (ex. : entre bâtiments) au niveau couche 2 OSI. Un AP racine distribue l'accès Internet, les autres se connectent en mode bridge et peuvent accueillir des clients comme en infrastructure.
+Un \acrshort{ap} en mode pont relie d'autres \acrshort{ap} pour étendre un réseau filaire (ex. : entre bâtiments) au niveau couche 2 OSI. Un \acrshort{ap} racine distribue l'accès Internet, les autres se connectent en mode bridge et peuvent accueillir des clients comme en infrastructure.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=1.8cm, minimum height=0.8cm, align=center}
+]
+\node[box] (root) {AP Racine\\Internet};
+\node[box, right=3cm of root] (bridge1) {AP Bridge 1};
+\node[box, right=3cm of bridge1] (bridge2) {AP Bridge 2};
+\node[box, below=1cm of bridge2] (sta1) {STA 1};
+\draw[<->, thick] (root) -- (bridge1);
+\draw[<->, thick] (bridge1) -- (bridge2);
+\draw[<->] (bridge2) -- (sta1);
+\end{tikzpicture}
+\caption{Mode Pont : extension réseau filaire via APs}
+\end{figure}
 
 \paragraph{Mode Répéteur (Range-extender)}
 
 Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). L'interface Ethernet reste inactive, mais chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne).
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=1.8cm, minimum height=0.8cm, align=center}
+]
+\node[box] (router) {Routeur\\principal};
+\node[box, right=4cm of router] (repeater) {Répéteur};
+\node[box, right=4cm of repeater] (sta) {STA\\Client};
+\draw[<->] (router) -- node[midway, above] {Signal Wi-Fi 1} (repeater);
+\draw[<->] (repeater) -- node[midway, above] {Signal Wi-Fi 2} (sta);
+\end{tikzpicture}
+\caption{Mode Répéteur : extension portée (débit /2, +latence)}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Mode} & \textbf{Lien principal} & \textbf{Ethernet} & \textbf{Usage} \\
+\hline
+Infrastructure & STA $\rightarrow$ AP & \cmark & Internet \\
+Ad hoc & STA $\leftrightarrow$ STA & \xmark & Échange direct \\
+Pont & AP $\leftrightarrow$ AP (câble) & \cmark & Relier bâtiments \\
+Répéteur & WiFi répété & \xmark & Étendre portée \\
+\hline
+\end{tabular}
+\caption{Modes Wi-Fi : synthèse}
+\label{tab:modes_wifi}
+\end{table}
+
 Ces modes fondamentaux conditionnent les mécanismes de sécurité analysés dans la suite, particulièrement en mode infrastructure dominant.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % WEP
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \subsection{Sécurité Wi-Fi}
 
 \subsubsection{WEP : Wired Equivalent Privacy}
 
-WEP (1997) constitue la première tentative de sécuriser les communications Wi-Fi. Il a été conçu à une époque où la cryptographie grand public était encore émergente, et souffre aujourd'hui de nombreuses limitations structurelles. Son objectif était de fournir une confidentialité comparable à celle d'un réseau filaire, mais son architecture s'est révélée profondément vulnérable.
+\acrshort{wep} (1997) constitue la première tentative de sécuriser les communications Wi-Fi. Il a été conçu à une époque où la cryptographie grand public était encore émergente, et souffre aujourd'hui de nombreuses limitations. Son objectif était de fournir une confidentialité comparable à celle d'un réseau filaire, mais son fonctionnement s'est révélée profondément vulnérable.
 
 \subsubsection*{Fonctionnement interne}
 
-WEP repose sur l'algorithme de chiffrement par flot RC4. Le mécanisme de chiffrement est simple :
+WEP repose sur l'algorithme de chiffrement par flot \acrshort{rc4}. Le mécanisme de chiffrement est simple :
+
 \begin{itemize}
     \item une clé secrète partagée statique, nommée SharedKey (40 ou 104 bits) ;
-    \item un vecteur d'initialisation (IV) de 24 bits, envoyé en clair ;
+    \item un \acrfull{iv} de 24 bits, envoyé en clair ;
     \item concaténation \texttt{IV || clé} comme entrée de RC4 ;
-    \item un ICV (Integrity Check Value) calculé via CRC-32, ajouté au plaintext avant chiffrement.
+    \item un \acrfull{icv} calculé via CRC-32, ajouté au plaintext (\textit{texte en clair}) avant chiffrement.
 \end{itemize}
 
 Le chiffrement d'un paquet se fait ainsi :
@@ -116,15 +197,13 @@ Le chiffrement d'un paquet se fait ainsi :
 \centering
 \begin{tikzpicture}[>=latex, node distance=0cm]
 
-% Bloc 802.11 Header
 \node[
     draw,
     minimum width=3.2cm,
     minimum height=1.1cm,
     align=center
-] (hdr) {802.11\\Header};
+] (hdr) {802.11\\En-tête};
 
-% Bloc IV
 \node[
     draw,
     minimum width=2.2cm,
@@ -133,7 +212,6 @@ Le chiffrement d'un paquet se fait ainsi :
     right=0.1cm of hdr
 ] (iv) {IV\\(24 bits)};
 
-% Bloc Données chiffrées
 \node[
     draw,
     minimum width=4.8cm,
@@ -142,7 +220,6 @@ Le chiffrement d'un paquet se fait ainsi :
     right=0.1cm of iv
 ] (data) {Données\\chiffrées (RC4)};
 
-% Bloc ICV
 \node[
     draw,
     minimum width=2.5cm,
@@ -161,43 +238,43 @@ Le chiffrement d'un paquet se fait ainsi :
 Le protocole WEP présente des faiblesses structurelles fondamentales :
 
 \begin{itemize}
-    \item \textbf{IV de 24 bits (16\,777\,216 valeurs possibles)} : chaque trame WEP transmet son vecteur d'initialisation en clair. Avec un trafic normal, les collisions d'IV surviennent en quelques minutes (souvent moins de 5 minutes pour un AP actif). Un attaquant peut alors combiner deux trames avec le même IV+clé pour annuler le keystream par XOR.
+    \item \textbf{IV de 24 bits (16\,777\,216 valeurs possibles)} : chaque \gls{trame} WEP transmet son vecteur d'initialisation en clair. Avec un trafic normal, les collisions d'IV surviennent en quelques minutes (souvent moins de 5 minutes pour un \acrshort{ap} actif). Un attaquant peut alors combiner deux trames avec le même IV+clé pour annuler le keystream par XOR.
     
-    \item \textbf{Aucun renouvellement de clé} : la clé secrète reste statique pendant des semaines/mois. Un IV réutilisé expose la même clé RC4 pendant toute la durée de vie de la clé, permettant une attaque par collecte massive de trames.
+    \item \textbf{Aucun renouvellement de clé} : la clé secrète reste statique pendant des semaines/mois. Un \acrshort{iv} réutilisé expose la même clé \acrshort{rc4} pendant toute la durée de vie de la clé, permettant une attaque par collecte massive de trames.
 
-    \item \textbf{ICV trop faible} : L’ICV étant un simple CRC-32 linéaire, il est possible de modifier des trames chiffrées sans connaître la clé, en recalculant un ICV valide.
+    \item \textbf{ICV trop faible} : L’ICV s'appuie sur un algorithme peu robuste, il est possible de modifier des trames chiffrées sans connaître la clé, en recalculant un ICV valide.
 \end{itemize}
 
 \vspace{0.3cm}
 
-Pour mieux comprendre le problème majeur de la taille de l'IV, nous allons prendre comme exemple : un IV est utilisé 2 fois $IV_0$, et deux messages combinsé (payload | ICV) $M_1$ et $M_2$.
+Pour mieux comprendre le problème majeur de la taille de l'IV, nous allons prendre comme exemple : un IV est utilisé 2 fois $IV_0$, et deux messages combinés (données | \acrshort{icv}) $M_1$ et $M_2$.
 
 \begin{enumerate}
-    \item $IV_0$ -> $RC4(IV_0||SharedKey) \oplus M_1 = C_1$
-    \item $IV_0$ -> $RC4(IV_0||SharedKey) \oplus M_2 = C_2$
+    \item $IV_0$ $\rightarrow$ $RC4(IV_0||SharedKey) \oplus M_1 = C_1$
+    \item $IV_0$ $\rightarrow$ $RC4(IV_0||SharedKey) \oplus M_2 = C_2$
     \item $C_1 \oplus C_2 = M_1 \oplus M_2$
-    \item Headers IP (IP/TCP standardardisé) connus de $M_1$ -> $M_2$ instantané
+    \item En-têtes IP (IP/TCP standardardisé) connus de $M_1$ $\rightarrow$ $M_2$ instantané
 \end{enumerate}
 
-En pratique, avec Aircrack NG, William Arbaugh note qu'il existe 50 \% de risque de collision après 4 823 paquets.
-La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,000 IVs pour des clés de 128 bit.
+En pratique, avec Aircrack NG, William Arbaugh note qu'il existe 50 \% de risque de collision après 4 823 paquets. \cite{Aircrack74:online}
+La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,000 IVs pour des clés de 128 bit. \cite{simplewe40:online}
 
 \newpage
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% WPA
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{WPA : Wi-Fi Protected Access}
 
-Face à la crise WEP, la Wi-Fi Alliance introduit en 2003 WPA comme correctif transitoire, visant à remplacer les composants vulnérables tout en conservant le matériel existant (compatibilité ascendante).
+% WPA
+
+\subsubsection{WPA : Wi-Fi Protected Access}
+
+Face à la crise WEP, la Wi-Fi Alliance introduit en 2003 \acrshort{wpa} comme correctif transitoire, visant à remplacer les composants vulnérables tout en conservant le matériel existant (compatibilité ascendante).
 
 \subsubsection*{Fonctionnement interne}
 
 WPA introduit plusieurs mécanismes :
 \begin{itemize}
     \item un mélange de clés élaboré (phase 1 et phase 2) ;
-    \item un compteur TSC (TKIP Sequence Counter) pour de l'anti-replay ;
-    \item un MIC (Message Integrity Code) pour de l'intégrité ;
+    \item un \acrfull{tsc} pour de l'anti-replay ;
+    \item un \acrfull{mic} pour de l'intégrité ;
     \item une rotation des clés fréquente.
 \end{itemize}
 
@@ -206,17 +283,19 @@ WPA introduit plusieurs mécanismes :
 Le protocole de WPA est divisé en 3 phases.
 
 \begin{itemize}
-    \item \textbf{Phase 1 (PBKDF2 4096 itérations)} : passphrase -> PMK résistante dictionnaire (impossible bruteforce hors ligne contrairement à WEP).
+    \item \textbf{Phase 1 (\acrshort{pbkdf2} 4096 itérations)} : passphrase $\rightarrow$ PMK résistante dictionnaire (impossible bruteforce hors ligne contrairement à WEP).
     
-    \item \textbf{Phase 2 (4-Way Handshake)} : PMK -> PTK échangée sans jamais transmettre la clé (ANonce/SNonce + MIC protègent). Clés éphémères.
+    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrshort{mic} protègent). Clés éphémères.
     
-    \item \textbf{Phase 3 (TKIP par trame)} : 
+    \item \textbf{Phase 3 (\acrshort{tkip} par trame)} : 
     \begin{itemize}
         \item TSC 48 bits (vs IV 24b WEP)
-        \item MIC (Michael) -> intégrité (vs CRC-32 faible)
-        \item RC4 + TSC -> keystream unique par trame
+        \item MIC (Michael) $\rightarrow$ intégrité (vs CRC-32 faible)
+        \item RC4 + TSC $\rightarrow$ keystream unique par trame
     \end{itemize}
 \end{itemize}
+
+\clearpage
 
 \subsubsection*{Fonctionnement interne (3 phases)}
 
@@ -228,7 +307,7 @@ WPA corrige WEP par 3 étapes distinctes :
 \begin{tikzpicture}[
     box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
 ]
-\node[box] (psk) {Pre Shared Key\\passphrase};
+\node[box] (psk) {\acrlong{psk}\\passphrase};
 \node[box, right=1.8cm of psk] (pbkdf2) {PBKDF2\\Dérivation de clé};
 \node[box, right=1.8cm of pbkdf2] (pmk) {Pairwise Master Key\\(256 bits)};
 \node[font=\small\bfseries, above=0.1cm of pbkdf2] {Phase 1 : Sécurisation de la clé};
@@ -246,7 +325,7 @@ WPA corrige WEP par 3 étapes distinctes :
 \node[box] (pmk2) {PMK};
 \node[box, right=1.8cm of pmk2] (handshake) {4-Way Handshake\\(décrit ensuite)};
 \node[box, right=1.8cm of handshake] (ptk) {Pairwise Transient Key\\(512 bits)};
-\node[font=\small\bfseries, above=0.1cm of handshake] {Phase 2 : Création d'une clé unique en AP et STA};
+\node[font=\small\bfseries, above=0.1cm of handshake] {Phase 2 : Création d'une clé unique en \acrshort{ap} et \acrshort{sta}};
 
 \draw[->] (pmk2) -- (handshake);
 \draw[->] (handshake) -- (ptk);
@@ -268,8 +347,8 @@ WPA corrige WEP par 3 étapes distinctes :
 % Données
 \node[box, below=1.2cm of mic] (pt) {Plaintext};
 \node[box, right=1.2cm of tk] (tsc) {TSC\\Sequence Counter};
-\node[box, right=1.2cm of pt] (rc4) {RC4\\Keystream};
-\node[box, right=1.2cm of rc4] (ct) {Ciphertext};
+\node[box, below=1.2cm of tk] (rc4) {RC4\\Keystream};
+\node[box, below=1.2cm of tsc] (ct) {Ciphertext};
 
 \node[font=\small\bfseries, above=0.2cm of ptk] {Phase 3 : Chiffrement TKIP par trame};
 
@@ -295,19 +374,19 @@ WPA corrige WEP par 3 étapes distinctes :
 
 Bien que RC4 soit toujours utilisé, WPA réduit significativement les risques d'attaque sans néanmoins les éliminer.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % 4-Way Handshake
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection*{Le 4-Way Handshake}
 
 Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
 
 \begin{itemize}
-    \item \textbf{Preuve mutuelle PMK} : STA et AP prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
+    \item \textbf{Preuve mutuelle PMK} : \acrshort{sta} et \acrshort{ap} prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
     
-    \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast STA <-> AP, dérivée de : $PTK = PRF(PMK, SSID, min(ANonce,SNonce) || max(ANonce,SNonce))$.
+    \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast \acrshort{sta} $\leftrightarrow$ \acrshort{ap}, dérivée de : $PTK = PRF(PMK, SSID, min(\Gls{anonce},\Gls{snonce}) || max(\Gls{anonce},\Gls{snonce}))$.
     
-    \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'AP l'envoie chiffrée avec la PTK du client.
+    \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'\acrshort{ap} l'envoie chiffrée avec la PTK du client.
 \end{itemize}
 
 
@@ -315,16 +394,16 @@ Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
 \centering
 \begin{tikzpicture}[>=latex]
 
-\node (sta) at (0,0) {Client (STA)};
-\node (ap)  at (6,0) {Point d'accès (AP)};
+\node (sta) at (0,0) {Client (\acrshort{sta})};
+\node (ap)  at (6,0) {Point d'accès (\acrshort{ap})};
 
 % Lignes de vie
 \draw (sta.south) -- ++(0,-6.5);
 \draw (ap.south)  -- ++(0,-6.5);
 
 % Messages
-\draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. ANonce} ++(-6,0);
-\draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. SNonce + MIC} ++(6,0);
+\draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. \Gls{anonce}} ++(-6,0);
+\draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. \Gls{snonce} + MIC} ++(6,0);
 \draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
 \draw[->] (sta.south)++(0,-5) -- node[above,sloped]{4. Confirmation} ++(6,0);
 
@@ -359,10 +438,10 @@ Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
 \label{fig:4way}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % WPA2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{WPA2 : AES-CCMP et le 4-Way Handshake}
+
+\subsubsection{WPA2 : AES-CCMP et le 4-Way Handshake}
 
 WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un chiffrement moderne AES-CCMP.
 
@@ -372,14 +451,14 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
     \item \textbf{WPA2-Enterprise} : PMK fournie via un serveur RADIUS et une authentification EAP.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % PMK -> PTK -> GTK derivation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Dérivation des clés}
+
+\subsubsection{Dérivation des clés}
 
 Au-delà de l’échange de messages représenté dans la Figure~\ref{fig:4way}, le 4-Way Handshake repose sur un mécanisme de dérivation de clés particulièrement structuré. L’ensemble du processus débute avec la PMK (Pairwise Master Key), qui constitue la base cryptographique partagée entre le client et le point d’accès. Dans le cas d’un réseau WPA2-PSK, cette PMK résulte directement de l’application d’une fonction de dérivation (PBKDF2) sur la passphrase et le SSID ; dans un environnement Enterprise, elle est fournie après l’authentification EAP par un serveur RADIUS. L’objectif du handshake n’est donc pas de négocier une nouvelle clé, mais de prouver que les deux entités possèdent bien cette PMK sans jamais la transmettre.
 
-À partir de cette PMK, les deux parties vont dériver une clé plus large appelée PTK (Pairwise Transient Key). La construction de la PTK repose sur plusieurs éléments : l’adresse MAC du point d’accès, celle du client, ainsi que deux valeurs aléatoires appelées ANonce (envoyée par l’AP) et SNonce (envoyée par la station). Ces quatre paramètres garantissent que la PTK générée est unique pour chaque session, même si la PMK reste identique : une propriété essentielle pour éviter la réutilisation de clés et limiter les risques d’attaque par rejeu ou par corrélation.
+À partir de cette PMK, les deux parties vont dériver une clé plus large appelée PTK (Pairwise Transient Key). La construction de la PTK repose sur plusieurs éléments : l’adresse MAC du point d’accès, celle du client, ainsi que deux valeurs aléatoires appelées \Gls{anonce} (envoyée par l’AP) et SNonce (envoyée par la station). Ces quatre paramètres garantissent que la PTK générée est unique pour chaque session, même si la PMK reste identique : une propriété essentielle pour éviter la réutilisation de clés et limiter les risques d’attaque par rejeu ou par corrélation.
 
 La PTK n’est pas utilisée directement ; elle est découpée en trois sous-clés distinctes, chacune remplissant un rôle spécifique dans la sécurisation du lien. La première est la KCK (Key Confirmation Key), employée pour calculer les MIC (Message Integrity Code) des messages du handshake. Elle permet à chaque partie de vérifier que l’autre possède bien la PTK correcte, et donc implicitement la PMK. La deuxième sous-clé est la KEK (Key Encryption Key), utilisée par l’AP pour chiffrer la GTK (Group Temporal Key) transmise dans le message~3. Cette clé assure que seul un client légitime peut recevoir ou mettre à jour la clé de diffusion. Enfin, la dernière composante est la TK (Temporal Key), qui servira au chiffrement effectif du trafic unicast échangé entre la station et l’AP après la fin du handshake.
 
@@ -401,12 +480,12 @@ Ainsi, le 4-Way Handshake ne se réduit pas à un simple échange de valeurs non
 \draw[->] (ptk.east) -- node[above]{KEK} (gtk.west);
 
 \end{tikzpicture}
-\caption{Dérivation cryptographique PMK $->$ PTK $->$ GTK}
+\caption{Dérivation cryptographique PMK $\rightarrow$ PTK $\rightarrow$ GTK}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % CCMP frame format
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection*{Format d'une trame CCMP (WPA2)}
 
 \begin{figure}[H]
@@ -421,10 +500,10 @@ Ainsi, le 4-Way Handshake ne se réduit pas à un simple échange de valeurs non
 \caption{Structure d'une trame CCMP}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % WPA3 / SAE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{WPA3 : SAE, Dragonfly, GCMP et PMF}
+
+\subsubsection{WPA3 : SAE, Dragonfly, GCMP et PMF}
 
 WPA3 corrige des failles structurelles de WPA2, notamment KRACK, en introduisant SAE (Dragonfly), OWE, PMF obligatoire, et le support obligatoire de GCMP dans certaines suites.
 
@@ -449,9 +528,9 @@ WPA3 corrige des failles structurelles de WPA2, notamment KRACK, en introduisant
 \caption{Handshake SAE (WPA3)}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % SAE / GCMP crypto details
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Mécanismes cryptographiques avancés}
 
 Les protocoles de sécurité modernes du Wi-Fi reposent sur des mécanismes cryptographiques plus élaborés que ceux utilisés par les générations précédentes. Contrairement à WEP et TKIP, qui n’offraient qu’une protection minimale contre l’écoute, l’injection ou la manipulation des trames, WPA2 et surtout WPA3 reposent sur des constructions cryptographiques complètes, conçues pour fournir à la fois confidentialité, intégrité, résistance aux attaques par rejeu et garanties formelles sur la sécurité de la session. Trois mécanismes occupent une place centrale : AES-CCMP, GCMP et SAE (aussi appelé Dragonfly). Ces primitives ne jouent pas le même rôle, mais constituent ensemble la base de la sécurité Wi-Fi contemporaine.
@@ -495,9 +574,9 @@ Pour résumer, ses caractériques principales sont les suivantes :
     \item protège contre attaques dictionnaires massives.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Format de trame GCMP
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection*{Format d'une trame GCMP}
 
 \begin{figure}[H]
@@ -512,9 +591,9 @@ Pour résumer, ses caractériques principales sont les suivantes :
 \caption{Structure d'une trame GCMP (WPA3)}
 \end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Synthesis table
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Synthèse comparative approfondie}
 
 \begin{table}[H]

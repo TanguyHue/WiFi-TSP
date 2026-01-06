@@ -3,11 +3,11 @@
 % -------------------------
 \section{Introduction}
 
-Les réseaux Wi-Fi sont devenus un élément incontournable des infrastructures numériques modernes. Que ce soit dans les environnements personnels, professionnels ou industriels, ils assurent une connectivité flexible, mais exposent également les systèmes à des risques spécifiques liés à la nature même des communications sans fil. Contrairement aux réseaux filaires, un réseau Wi-Fi dépasse toujours les limites physiques du bâtiment ou de l’organisation qui l’utilise, ce qui permet à un attaquant de s’y connecter ou de l’observer sans jamais avoir à pénétrer physiquement dans les locaux. Cette caractéristique en fait une cible privilégiée et un vecteur d’attaque largement exploité.\\
+Les réseaux \acrfull{wifi} sont devenus un élément incontournable des infrastructures numériques modernes. Que ce soit dans les environnements personnels, professionnels ou industriels, ils assurent une connectivité flexible, mais exposent également les systèmes à des risques spécifiques liés à la nature même des communications sans fil. Contrairement aux réseaux filaires, un réseau Wi-Fi dépasse toujours les limites physiques du bâtiment ou de l’organisation qui l’utilise, ce qui permet à un attaquant de s’y connecter ou de l’observer sans jamais avoir à pénétrer physiquement dans les locaux. Cette caractéristique en fait une cible privilégiée et un vecteur d’attaque largement exploité.\\
 
-Les mécanismes de sécurité Wi-Fi ont pourtant beaucoup évolué au fil des années. Après les faiblesses majeures de WEP et les limites de WPA, WPA2 a longtemps été considéré comme un standard robuste, jusqu’à l’apparition d’attaques protocolaires comme KRACK. Plus récemment, WPA3 a introduit de nouveaux mécanismes destinés à renforcer l’authentification et la confidentialité, mais même cette version moderne a connu ses premières vulnérabilités dès sa diffusion. Cette succession d’avancées et de contournements montre que la sécurité Wi-Fi est un domaine en évolution constante, dans lequel chaque amélioration technique entraîne l’apparition de nouvelles attaques ciblées.\\
+Les mécanismes de sécurité Wi-Fi ont pourtant beaucoup évolué au fil des années. Après les faiblesses majeures de \acrshort{wep} et les limites de \acrshort{wpa}, \acrshort{wpa2} a longtemps été considéré comme un standard robuste, jusqu’à l’apparition d’attaques protocolaires comme KRACK. Plus récemment, \acrshort{wpa3} a introduit de nouveaux mécanismes destinés à renforcer l’authentification et la confidentialité, mais même cette version moderne a connu ses premières vulnérabilités dès sa diffusion. Cette succession d’avancées et de contournements montre que la sécurité Wi-Fi est un domaine en évolution constante, dans lequel chaque amélioration technique entraîne l’apparition de nouvelles attaques ciblées.\\
 
-Malgré les améliorations successives des protocoles et l’apparition de WPA3, les réseaux Wi-Fi restent vulnérables. Beaucoup d’équipements utilisent encore des standards anciens ou sont configurés avec des options de rétrocompatibilité qui affaiblissent la sécurité. Les implémentations varient d’un constructeur à l’autre, certaines protections dépendent du comportement du client, et les attaques théoriques se révèlent parfois très simples à reproduire en pratique. La problématique centrale de ce travail est donc de comprendre quelles attaques restent réellement efficaces aujourd’hui, comment elles peuvent être mises en œuvre dans un environnement réaliste, et quelles implications elles ont sur la sécurité globale d’un réseau Wi-Fi.\\
+Malgré les améliorations successives des protocoles et l’apparition de \acrshort{wpa3}, les réseaux Wi-Fi restent vulnérables. Beaucoup d’équipements utilisent encore des standards anciens ou sont configurés avec des options de rétrocompatibilité qui affaiblissent la sécurité. Les implémentations varient d’un constructeur à l’autre, certaines protections dépendent du comportement du client, et les attaques théoriques se révèlent parfois très simples à reproduire en pratique. La problématique centrale de ce travail est donc de comprendre quelles attaques restent réellement efficaces aujourd’hui, comment elles peuvent être mises en œuvre dans un environnement réaliste, et quelles implications elles ont sur la sécurité globale d’un réseau Wi-Fi.\\
 
 Dans ce contexte, ce projet s'intéresse à la compréhension des principales failles affectant les réseaux Wi-Fi actuels et à l’analyse des attaques réellement exploitables sur le terrain. Il s'agit d’étudier comment un attaquant peut contourner les protections en place, quelles conditions pratiques rendent ces attaques possibles, et quelles sont leurs conséquences concrètes sur la confidentialité, l’intégrité et la disponibilité des communications. L’objectif n’est pas uniquement théorique : il s’agit de reproduire ces attaques dans un environnement maîtrisé afin d’observer leur fonctionnement, d’en comprendre les mécanismes internes et d’évaluer leur pertinence vis-à-vis des architectures modernes.
 
@@ -18,12 +18,12 @@ Dans ce contexte, ce projet s'intéresse à la compréhension des principales fa
 % -------------------------
 \section{Objectifs du projet}
 \subsection{Objectif général}
-Étudier, analyser et reproduire des attaques WiFi représentatives de la menace actuelle.
+Étudier, analyser et reproduire des attaques \acrshort{wifi} représentatives de la menace actuelle.
 
 \subsection{Objectifs spécifiques}
 \begin{itemize}
-    \item Mettre en place un laboratoire WiFi complet (Kali + AP + VM Windows).
-    \item Reproduire des attaques WiFi.
+    \item Mettre en place un laboratoire Wi-Fi complet (Kali + \acrshort{ap} + VM Windows).
+    \item Reproduire des attaques Wi-Fi.
     \item Capturer, analyser et expliquer les traces réseau.
     \item Évaluer les conséquences et proposer des contre-mesures.
 \end{itemize}

@@ -4,30 +4,38 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb}
+\usepackage{pifont}
 \usepackage{graphicx}
 \usepackage{geometry}
-\usepackage{hyperref}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
 \usepackage{appendix}
 \usepackage{subcaption}
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{float}
-% \usepackage{enumitem}
+\usepackage[acronym]{glossaries}
 \usetikzlibrary{positioning}
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{shapes}
 \usetikzlibrary{calc}
 
+\input{glossaire/acronyme}
+\input{glossaire/glossaire}
+
+\makeglossaries
+
 \renewcommand{\appendixpagename}{Annexes}
 \renewcommand{\appendixtocname}{Annexes}
-
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 \geometry{margin=2.5cm}
 
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\footnotesize Télécom SudParis — Mastère Spécialisé Cybersécurité}
-\fancyhead[R]{\footnotesize Projet Laboratoire WiFi}
+\fancyhead[R]{\footnotesize Projet Laboratoire Wi-Fi}
 \fancyfoot[C]{\thepage}
 
 \begin{document}
@@ -41,6 +49,11 @@
 \listoffigures
 \newpage
 
+\printglossary[type=\acronymtype,title=Liste des acronymes,toctitle=Acronymes]
+\printglossary[title=Glossaire,toctitle=Glossaire]
+
+\newpage
+
 \input{tex/02-introduction}
 \input{tex/03-protocoles}
 \input{tex/04-etatdelart}
@@ -48,16 +61,10 @@
 \input{tex/06-experiences}
 \input{tex/07-conclusion}
 
-% -------------------------
-% Bibliographie
-% -------------------------
 \addcontentsline{toc}{section}{Références}
 \bibliographystyle{IEEEtran}
 \bibliography{bib/IEEEreferencias.bib}
 
-% -------------------------
-% Annexes
-% -------------------------
 \appendix
 \clearpage
 \appendixpage
