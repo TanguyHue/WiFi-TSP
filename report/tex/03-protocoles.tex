@@ -478,46 +478,160 @@ WPA corrige WEP par 3 étapes distinctes :\\
         \label{tab:wpa_keys}
     \end{table}
 
-    \item \textbf{Phase 3 (TKIP par trame)} : une fois les clés installées, chaque trame de données est chiffrée indépendamment à l'aide de l'algorithme TKIP. 
-        Contrairement à WEP, une clé unique est générée pour chaque paquet.
+    \item \textbf{Phase 3 (TKIP par trame)} : une fois les clés installées, chaque trame de données est chiffrée indépendamment à l’aide de l’algorithme \acrshort{tkip}.
+    Contrairement à WEP, WPA ne réutilise jamais une même clé de chiffrement pour plusieurs trames : une clé différente est dérivée pour chaque paquet transmis.
 
-        Pour chaque trame, les éléments suivants sont utilisés :
-        \begin{itemize}
-            \item la clé temporaire TK ;
-            \item l'adresse MAC de l'émetteur ;
-            \item le \acrfull{tsc} (compteur anti-rejeu de 48 bits).
-        \end{itemize}
+    Pour chaque trame, les éléments suivants sont utilisés :
+    \begin{itemize}
+        \item la clé temporaire \textbf{TK} (Temporal Key), issue du \acrshort{ptk} ;
+        \item l’adresse MAC de l’émetteur, utilisée pour lier la clé à la station ;
+        \item le \acrfull{tsc} (TKIP Sequence Counter), un compteur de 48 bits jouant le rôle d’IV étendu et de mécanisme anti-rejeu.
+    \end{itemize}
 
-        TKIP applique un \textbf{mélange de clés en deux phases} :
-        \begin{itemize}
-            \item \textbf{Phase 1} : combine la TK, la MAC source et les 32 bits de poids fort du TSC pour produire une clé intermédiaire ;
-            \item \textbf{Phase 2} : intègre les 16 bits de poids faible du TSC afin de générer la clé RC4 finale spécifique au paquet.
-        \end{itemize}
+    \medskip
+    TKIP applique un \textbf{mélange de clés en deux phases} afin de produire une clé RC4 unique pour chaque trame :
 
-Un \acrshort{mic} est ensuite calculé sur les données en clair avant chiffrement, puis l'ensemble est chiffré à l'aide de RC4 et transmis.
+    \begin{itemize}
+        \item \textbf{Phase 1 (Key Mixing Phase 1)} : la clé TK, l’adresse MAC source et les 32 bits de poids fort du TSC sont combinés pour produire une clé intermédiaire. Cette étape permet de limiter la réutilisation des IV ;
+        \item \textbf{Phase 2 (Key Mixing Phase 2)} : les 16 bits de poids faible du TSC sont ensuite intégrés à la clé intermédiaire afin de générer la clé finale spécifique au paquet, appelée \acrshort{ppk}, qui servira d’entrée à l’algorithme RC4. Il y aura également l'utilisation de 16 bits de l'\acrshort{iv} ainsi que des bits spéciaux \textit{d}, utilisés pour éviter d'avoir des \acrshort{iv} faibles.
+    \end{itemize}
 
-    \begin{figure}[H]
-        \centering
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners, minimum width=2.6cm, minimum height=0.9cm, align=center}
-        ]
-        \node[box] (data) {Données claires};
-        \node[box, below=0.8cm of data] (mic) {Calcul MIC};
-        \node[box, below=0.8cm of mic] (mix) {Key Mixing TKIP};
-        \node[box, below=0.8cm of mix] (rc4) {Chiffrement RC4};
-        \node[box, below=0.8cm of rc4] (frame) {Trame Wi-Fi chiffrée};
+    \medskip
+    Avant le chiffrement, un \acrfull{mic} est calculé sur les données en clair à l’aide de l’algorithme \textbf{Michael}. Ce MIC protège le contenu contre les modifications actives et est concaténé aux données avant le calcul de l’ICV (CRC-32).
 
-        \draw[->] (data) -- (mic);
-        \draw[->] (mic) -- (mix);
-        \draw[->] (mix) -- (rc4);
-        \draw[->] (rc4) -- (frame);
-        \end{tikzpicture}
-        \caption{Chiffrement d'une trame WPA-TKIP}
-        \label{fig:wpa_tkip_frame}
-        \end{figure}
+    L’ensemble \textit{(données || MIC || ICV)} est ensuite chiffré par XOR avec le flot de clés généré par RC4, comme illustré par les figures \ref{fig:wpa_tkip_frame_1} à \ref{fig:wpa_tkip_frame_2}.
+
+    On obtient finalement le paquet \ref{fig:wpa_tkip_full}, suite au XOR effectué sur les algorithmes.
+
+    Pour rappel, l'\acrshort{iv} est composé du \acrshort{tsc}, ce qui signifie qu'à chaque échange, celui-ci va être incrémenter. Et par conséquent, l'\acrshort{iv} sera à son tour unique.
+
+\newpage
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw, rectangle, minimum width=2.8cm, minimum height=0.9cm, align=center},
+        smallbox/.style={draw, rectangle, minimum width=2.4cm, minimum height=0.7cm, align=center, font=\footnotesize},
+        key_mixing/.style={draw, rectangle, fill=orange!70, minimum width=3cm, minimum height=0.9cm, align=center},
+        rc4/.style={draw, rectangle, fill=blue!60, minimum width=3cm, minimum height=0.9cm, align=center},
+        xor/.style={draw, rectangle, fill=green!60, minimum width=3cm, minimum height=0.9cm, align=center},
+        arrow/.style={->, thick}
+    ]
+
+    % ====== TOP INPUTS ======
+    \node[box] (iv) {IV \\ (48 bits)};
+    \node[box, right=1.2cm of iv] (ptk) {PTK \\ (128 bits)};
+    \node[box, right=1.2cm of ptk] (mac) {Sender MAC \\ Address (48 bits)};
+
+    % ====== KEY MIXING ======
+    \node[key_mixing, below=1.2cm of ptk] (mix1) {Step 1 Key Mixing};
+    \node[key_mixing, below=0.8cm of mix1] (mix2) {Step 2 Key Mixing};
+
+    \node[smallbox, below=0.8cm of mix2] (ppk) {PPK \\ (104 bits)};
+
+    \node[smallbox, left=0cm of ppk] (iv16_1) {IV \\ (16 bits)};
+    \node[smallbox, left=0cm of iv16_1] (dbyte) {\texttt{d} \\ special byte};
+    \node[smallbox, left=0cm of dbyte] (iv16_2) {IV \\ (16 bits)};
+
+    % ====== RC4 ======
+    \node[rc4, below=1.0cm of ppk] (rc4) {RC4};
+    \node[box, below=1.0cm of rc4] (keystream) {Keystream};
+
+    % ====== XOR ======
+    \node[xor, right=1.4cm of keystream] (xor) {XOR};
+
+    % ====== ARROWS ======
+    \draw[arrow] (iv) |- node[left]{32 bits} (mix1);
+    \draw[arrow] (iv) -| node[left]{16 bits} (iv16_2);
+    \draw[arrow] (iv) |- node[left]{16 bits} (mix2);
+
+    \draw[arrow] (ptk) -- (mix1);
+    \draw[arrow] (mac) |- (mix1);
+
+    \draw[arrow] (mix1) -- (mix2);
+    \draw[arrow] (mix2) -- (ppk);
+    \draw[arrow] (ppk) -- (rc4);
+    \draw[arrow] (iv16_1) |- (rc4);
+    \draw[arrow] (iv16_2) |- (rc4);
+    \draw[arrow] (dbyte) |- (rc4);
+    \draw[arrow] (rc4) -- (keystream);
+
+    \draw[arrow] (keystream) |- (xor);
+    \end{tikzpicture}
+        \caption{Création keystream WPA\cite{WeaknessesWPA:online}}
+        \label{fig:wpa_tkip_frame_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw, rectangle, minimum width=2.8cm, minimum height=0.9cm, align=center},
+        smallbox/.style={draw, rectangle, minimum width=2.4cm, minimum height=0.7cm, align=center, font=\footnotesize},
+        algo/.style={draw, rectangle, fill=blue!60, minimum width=3cm, minimum height=0.9cm, align=center},
+        xor/.style={draw, rectangle, fill=green!60, minimum width=3cm, minimum height=0.9cm, align=center},
+        arrow/.style={->, thick}
+    ]
+
+    % ====== TOP INPUTS ======
+    \node[box] (plaintext_msdu) {Plaintext MSDU};
+    \node[algo, right=1.0cm of plaintext_msdu] (miccalc) {MIC = Michael \\ (TK, SA, DA, Plaintext)};
+
+    % ====== PLAINTEXT PATH ======
+    \node[box, below=1.0cm of plaintext_msdu] (plaintext_mpdu) {Plaintext MPDU \\ (Plaintext || MIC)};
+    \node[algo, right=1.0cm of plaintext_mpdu] (crc) {ICV \\ CRC-32};
+
+    \node[box, below=1.0cm of crc] (plaintext_mpdu_final) {Plaintext MPDU};
+    \node[smallbox, right=0cm of plaintext_mpdu_final] (crcgen) {ICV\\( 4 octets)};
+
+    % ====== XOR ======
+    \node[xor, right=1.4cm of crcgen] (xor) {XOR};
+
+    % ====== ARROWS ======
+    \draw[arrow] (plaintext_msdu) -- (miccalc);
+    \draw[arrow] (plaintext_msdu) -- (plaintext_mpdu);
+    \draw[->] (miccalc) -- ++(0,-0.8) -| (plaintext_mpdu);
+    \draw[arrow] (plaintext_mpdu) -- (crc);
+    \draw[arrow] (plaintext_mpdu) |- (plaintext_mpdu_final);
+    \draw[arrow] (crc) -| (crcgen);
+
+    \draw[arrow] (crcgen) -- (xor);
+
+    \end{tikzpicture}
+        \caption{Gestion plaintext WPA\cite{WeaknessesWPA:online}}
+        \label{fig:wpa_tkip_frame_2}
+\end{figure}
 \end{itemize}
 
-Bien que RC4 soit toujours utilisé, WPA réduit significativement les risques d'attaque sans néanmoins les éliminer.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw, rectangle, minimum width=2.8cm, minimum height=0.9cm, align=center},
+        smallbox/.style={draw, rectangle, minimum width=2.4cm, minimum height=0.7cm, align=center, font=\footnotesize},
+        xor/.style={draw, rectangle, fill=green!60, minimum width=3cm, minimum height=0.9cm, align=center},
+        packet/.style={draw, rectangle, fill=red!70, minimum width=2.2cm, minimum height=0.8cm, align=center},
+        arrow/.style={->, thick}
+    ]
+
+    % ====== XOR ======
+    \node[xor] (xor) {XOR};
+
+    % ====== OUTPUT FRAME ======
+    \node[box, below=1.2cm of xor] (macheader) {MAC Header};
+    \node[box, right=0cm of macheader] (ivkey) {IV / KeyID};
+    \node[packet, right=0cm of ivkey] (dataout) {MSDU};
+    \node[packet, right=0cm of dataout] (micout) {MIC};
+    \node[packet, right=0cm of micout] (icv) {ICV};
+    \node[box, right=0cm of icv] (fcs) {FCS};
+
+    % ====== ARROWS ======
+    \draw[arrow] (xor) -| (dataout);
+    \draw[arrow] (xor) -| (micout);
+    \draw[arrow] (xor) -| (icv);
+
+    \end{tikzpicture}
+    \caption{Paquet WPA final\cite{WeaknessesWPA:online}}
+    \label{fig:wpa_tkip_full}
+\end{figure}
 
 % WPA2
 
@@ -530,39 +644,6 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
     \item \textbf{WPA2-PSK} : la PMK (\textit{Pairwise Master Key} : clé maitresse) = PBKDF2(\textit{Password-Based Key Derivation Function 2} : basée sur une passphrase et le SSID).
     \item \textbf{WPA2-Enterprise} : PMK fournie via un serveur RADIUS et une authentification EAP.
 \end{itemize}
-
-
-% PMK -> PTK -> GTK derivation
-
-\subsubsection{Dérivation des clés}
-
-Au-delà de l’échange de messages représenté dans la Figure~\ref{fig:4way}, le 4-Way Handshake repose sur un mécanisme de dérivation de clés particulièrement structuré. L’ensemble du processus débute avec la PMK (Pairwise Master Key), qui constitue la base cryptographique partagée entre le client et le point d’accès. Dans le cas d’un réseau WPA2-PSK, cette PMK résulte directement de l’application d’une fonction de dérivation (PBKDF2) sur la passphrase et le SSID ; dans un environnement Enterprise, elle est fournie après l’authentification EAP par un serveur RADIUS. L’objectif du handshake n’est donc pas de négocier une nouvelle clé, mais de prouver que les deux entités possèdent bien cette PMK sans jamais la transmettre.
-
-À partir de cette PMK, les deux parties vont dériver une clé plus large appelée PTK (Pairwise Transient Key). La construction de la PTK repose sur plusieurs éléments : l’adresse MAC du point d’accès, celle du client, ainsi que deux valeurs aléatoires appelées \Gls{anonce} (envoyée par l’AP) et SNonce (envoyée par la station). Ces quatre paramètres garantissent que la PTK générée est unique pour chaque session, même si la PMK reste identique : une propriété essentielle pour éviter la réutilisation de clés et limiter les risques d’attaque par rejeu ou par corrélation.
-
-La PTK n’est pas utilisée directement ; elle est découpée en trois sous-clés distinctes, chacune remplissant un rôle spécifique dans la sécurisation du lien. La première est la KCK (Key Confirmation Key), employée pour calculer les MIC (Message Integrity Code) des messages du handshake. Elle permet à chaque partie de vérifier que l’autre possède bien la PTK correcte, et donc implicitement la PMK. La deuxième sous-clé est la KEK (Key Encryption Key), utilisée par l’AP pour chiffrer la GTK (Group Temporal Key) transmise dans le message~3. Cette clé assure que seul un client légitime peut recevoir ou mettre à jour la clé de diffusion. Enfin, la dernière composante est la TK (Temporal Key), qui servira au chiffrement effectif du trafic unicast échangé entre la station et l’AP après la fin du handshake.
-
-Un autre élément important est la présence de la GTK, envoyée par le point d’accès lors du message~3 du 4-Way Handshake. Contrairement à la PTK, qui est propre à une paire client–AP, la GTK est partagée entre tous les clients d’un même réseau et sert au chiffrement des trames multicast et broadcast. Sa transmission protégée par la KEK garantit qu’un attaquant passif ne peut pas l’intercepter, tandis que son renouvellement régulier limite les risques de compromission en cas d’écoute prolongée.
-
-Ainsi, le 4-Way Handshake ne se réduit pas à un simple échange de valeurs nonces, mais constitue un véritable protocole d’initialisation cryptographique. Il assure simultanément la preuve de possession du secret initial, la dérivation de clés fraîches, l’établissement d’un canal chiffré sécurisé et la synchronisation des compteurs de trames. L’ensemble du mécanisme repose sur des propriétés formelles destinées à garantir la confidentialité et l’intégrité des échanges, tout en minimisant les risques liés à la réutilisation ou à la dérivation incorrecte des clés.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[>=latex, node distance=1.8cm]
-
-\node[draw, rounded corners, inner sep=4pt] (pmk) {PMK};
-\node[draw, rounded corners, below=of pmk, inner sep=4pt] (prf) {PRF(PMK, nonces, MAC)};
-\node[draw, rounded corners, below=of prf, inner sep=4pt] (ptk) {PTK = KCK || KEK || TK};
-\node[draw, rounded corners, right=3cm of ptk, inner sep=4pt] (gtk) {GTK};
-
-\draw[->] (pmk) -- (prf);
-\draw[->] (prf) -- node[left]{4-way handshake} (ptk);
-\draw[->] (ptk.east) -- node[above]{KEK} (gtk.west);
-
-\end{tikzpicture}
-\caption{Dérivation cryptographique PMK $\rightarrow$ PTK $\rightarrow$ GTK}
-\end{figure}
-
 
 % CCMP frame format
 
