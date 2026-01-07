@@ -478,32 +478,76 @@ WPA corrige WEP par 3 étapes distinctes :\\
         \label{tab:wpa_keys}
     \end{table}
 
-    \item \textbf{Phase 3 (TKIP par trame)} : une fois les clés installées, chaque trame de données est chiffrée indépendamment à l’aide de l’algorithme \acrshort{tkip}.
-    Contrairement à WEP, WPA ne réutilise jamais une même clé de chiffrement pour plusieurs trames : une clé différente est dérivée pour chaque paquet transmis.
+    \item \textbf{Phase 3 (TKIP par trame)} : une fois la \acrshort{ptk} et la \acrshort{gtk} installées, WPA chiffre les données utilisateur à l’aide de l’algorithme \acrshort{tkip}.  
+Contrairement à WEP, WPA garantit qu’une \textbf{clé de chiffrement distincte est utilisée pour chaque trame}, même si la clé maîtresse reste inchangée.
 
-    Pour chaque trame, les éléments suivants sont utilisés :
-    \begin{itemize}
-        \item la clé temporaire \textbf{TK} (Temporal Key), issue du \acrshort{ptk} ;
-        \item l’adresse MAC de l’émetteur, utilisée pour lier la clé à la station ;
-        \item le \acrfull{tsc} (TKIP Sequence Counter), un compteur de 48 bits jouant le rôle d’IV étendu et de mécanisme anti-rejeu.
-    \end{itemize}
+\medskip
+Pour chaque trame transmise, TKIP s’appuie sur trois paramètres fondamentaux :
+\begin{itemize}
+    \item la \textbf{Temporal Key (TK)}, dérivée de la PTK ;
+    \item l’\textbf{adresse MAC source}, liant cryptographiquement la trame à son émetteur ;
+    \item le \acrfull{tsc}, un compteur de 48 bits.
+\end{itemize}
 
-    \medskip
-    TKIP applique un \textbf{mélange de clés en deux phases} afin de produire une clé RC4 unique pour chaque trame :
+\medskip
+Le \acrshort{tsc} est incrémenté à chaque trame émise et joue un rôle central dans WPA-TKIP.  
+Il assure à la fois :
+\begin{itemize}
+    \item l’\textbf{unicité de la clé de chiffrement par paquet} ;
+    \item un \textbf{mécanisme anti-rejeu}, toute trame reçue avec un TSC déjà observé étant rejetée.
+\end{itemize}
 
-    \begin{itemize}
-        \item \textbf{Phase 1 (Key Mixing Phase 1)} : la clé TK, l’adresse MAC source et les 32 bits de poids fort du TSC sont combinés pour produire une clé intermédiaire. Cette étape permet de limiter la réutilisation des IV ;
-        \item \textbf{Phase 2 (Key Mixing Phase 2)} : les 16 bits de poids faible du TSC sont ensuite intégrés à la clé intermédiaire afin de générer la clé finale spécifique au paquet, appelée \acrshort{ppk}, qui servira d’entrée à l’algorithme RC4. Il y aura également l'utilisation de 16 bits de l'\acrshort{iv} ainsi que des bits spéciaux \textit{d}, utilisés pour éviter d'avoir des \acrshort{iv} faibles.
-    \end{itemize}
+\medskip
 
-    \medskip
-    Avant le chiffrement, un \acrfull{mic} est calculé sur les données en clair à l’aide de l’algorithme \textbf{Michael}. Ce MIC protège le contenu contre les modifications actives et est concaténé aux données avant le calcul de l’ICV (CRC-32).
+Dans WPA utilisant TKIP, le champ historiquement appelé \textbf{IV} ne correspond plus à un vecteur d’initialisation aléatoire comme en WEP.  
+Il transporte en réalité une représentation structurée du \acrfull{tsc}, d’où le terme d’\textit{IV étendu}.
 
-    L’ensemble \textit{(données || MIC || ICV)} est ensuite chiffré par XOR avec le flot de clés généré par RC4, comme illustré par les figures \ref{fig:wpa_tkip_frame_1} à \ref{fig:wpa_tkip_frame_2}.
+Le TSC est un compteur de 48 bits, unique et incrémenté pour chaque trame émise. Il est utilisé pour générer une clé de chiffrement différente pour chaque paquet, ce qui empêche les attaques par rejouage et améliore la sécurité du protocole.  
 
-    On obtient finalement le paquet \ref{fig:wpa_tkip_full}, suite au XOR effectué sur les algorithmes.
+\paragraph{Composition de l'IV étendu (16 bits dans la trame) :}  
+Le champ IV envoyé dans la trame est une version codée et partielle du TSC, combinée avec le KeyID et quelques bits de contrôle :
 
-    Pour rappel, l'\acrshort{iv} est composé du \acrshort{tsc}, ce qui signifie qu'à chaque échange, celui-ci va être incrémenter. Et par conséquent, l'\acrshort{iv} sera à son tour unique.
+\begin{itemize}
+    \item \textbf{IV16 (bits 0-15) :} Correspond aux 16 bits de poids faible du TSC. Ces bits changent à chaque trame et garantissent l’unicité de la clé RC4 pour cette trame.  
+    \item \textbf{IV8 (bits 16-23) :} Contient les 8 bits suivants du TSC.  
+    \item \textbf{KeyID (2 bits) :} Ce champ identifie quelle clé de chiffrement parmi les clés partagées par le point d’accès et le client doit être utilisée pour cette trame. Il permet au récepteur de savoir quelle clé appliquer pour déchiffrer le paquet.  
+    \item \textbf{Ext. IV / Reserved (6 bits) :} Ce champ complète le TSC en incluant les bits de poids fort (pour former les 48 bits du compteur de séquence) et peut également contenir des indicateurs de fragmentation ou des bits réservés pour la compatibilité. Il garantit l’unicité de la clé de chiffrement pour chaque trame et permet de gérer correctement les trames fragmentées.
+\end{itemize}
+
+\medskip
+Afin de produire une clé RC4 unique pour chaque trame, TKIP applique un \textbf{mélange de clés en deux phases} (\textit{Key Mixing}) :
+
+\medskip
+\noindent
+\textbf{Key Mixing – Phase 1 :}  
+La première phase combine :
+\begin{itemize}
+    \item la \textbf{Temporal Key (TK)} ;
+    \item l’\textbf{adresse MAC source} ;
+    \item les \textbf{32 bits de poids fort du TSC} (\( \text{TSC}[47:16] \)).
+\end{itemize}
+
+Cette étape produit une \textbf{clé intermédiaire} spécifique à la station émettrice et au flot de transmission.  
+Comme les bits de poids fort du TSC évoluent lentement, cette phase limite efficacement les collisions de clés tout en restant peu coûteuse en calcul.
+
+\medskip
+\noindent
+\textbf{Key Mixing – Phase 2 :}  
+La seconde phase affine cette clé intermédiaire en intégrant :
+\begin{itemize}
+    \item les \textbf{16 bits de poids faible du TSC} (\( \text{TSC}[15:0] \)) ;
+    \item des \textbf{bits de contrôle de l’IV}, notamment le bit \textit{ExtIV} et des bits destinés à éviter les IV faibles connus de RC4.
+\end{itemize}
+
+Cette phase produit la \textbf{clé finale par trame}, appelée \acrshort{ppk}, utilisée comme entrée de l’algorithme RC4.  
+Ainsi, même deux trames consécutives émises par une même station ne partageront jamais la même clé de chiffrement.
+
+\medskip
+Avant le chiffrement, un \acrfull{mic} est calculé sur les données en clair à l’aide de l’algorithme \textbf{Michael}.  
+Ce MIC protège la trame contre les modifications actives et est concaténé aux données avant le calcul de l’\acrshort{icv} (CRC-32).
+
+\medskip
+L’ensemble \textit{(données || MIC || ICV)} est finalement chiffré par un XOR avec le flot de clés généré par RC4, produisant la trame WPA-TKIP transmise sur le médium radio.
 
 \newpage
 
