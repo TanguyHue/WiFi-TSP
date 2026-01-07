@@ -7,6 +7,7 @@
 \usepackage{pifont}
 \usepackage{graphicx}
 \usepackage{geometry}
+\usepackage{lastpage}
 \usepackage{cite}
 \usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
@@ -36,7 +37,8 @@
 \fancyhf{}
 \fancyhead[L]{\footnotesize Télécom SudParis — Mastère Spécialisé Cybersécurité}
 \fancyhead[R]{\footnotesize Projet Laboratoire Wi-Fi}
-\fancyfoot[C]{\thepage}
+\fancyfoot[L]{\footnotesize Tanguy HUE - Clément LEPRETTRE}
+\fancyfoot[R]{\footnotesize Page \thepage \hspace{1pt} of \pageref{LastPage}}
 
 \begin{document}
 
@@ -50,8 +52,9 @@
 \newpage
 
 \printglossary[type=\acronymtype,title=Liste des acronymes,toctitle=Acronymes]
-\printglossary[title=Glossaire,toctitle=Glossaire]
+\newpage
 
+\printglossary[title=Glossaire,toctitle=Glossaire]
 \newpage
 
 \input{tex/02-introduction}
