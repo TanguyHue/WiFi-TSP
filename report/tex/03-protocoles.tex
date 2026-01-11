@@ -7,7 +7,7 @@ La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes crypto
 
 Le Wi-Fi, ou norme IEEE 802.11, désigne un ensemble de standards pour les réseaux locaux sans fil (WLAN) permettant la transmission de données numériques par ondes radio (principalement 2,4 GHz, 5 GHz et 6 GHz). Développé à partir des années 1990 par le comité IEEE 802.11 pour répondre à la demande croissante de connectivité mobile sans câblage Ethernet, le premier standard a été publié en 1997, révolutionnant l'accès aux données en éliminant les contraintes physiques des réseaux filaires.
 
-Aujourd'hui, le Wi-Fi est omniprésent : hotspots publics (cafés, aéroports, transports), entreprises, foyers. Avec Wi-Fi 7 (802.11be, 2024) et au-delà, il supporte des débits >46 Gbit/s.
+Aujourd'hui, le Wi-Fi est omniprésent : points d'accès publics (cafés, aéroports, transports), entreprises, foyers. Avec Wi-Fi 7 (802.11be, 2024) et au-delà, il supporte des débits >46 Gbit/s\cite{WiFi7pou99:online}.
 
 \subsection*{Définitions générales Wi-Fi}
 
@@ -37,7 +37,7 @@ Avant d’aborder en détail le fonctionnement des différents protocoles de sé
 \label{fig:ap_sta_ssid_bssid}
 \end{figure}
 
-Les communications Wi-Fi reposent sur des \glspl{trame} qui circulent au niveau de la couche MAC du modèle 802.11. On distingue notamment les trames de \textit{gestion}, essentielles pour l’association, l’authentification ou la déconnexion ; les trames de \textit{contrôle}, destinées à réguler l’accès au médium ; et les trames de \textit{données}, qui transportent l’information utilisateur ou les paquets réseau encapsulés. La plupart des attaques Wi-Fi tirent parti de la possibilité d’observer, d’injecter ou de manipuler ces différentes catégories de trames.
+Les communications Wi-Fi reposent sur des \glspl{trame} qui circulent au niveau de la couche MAC du modèle 802.11. On distingue notamment les trames de \textit{gestion}, essentielles pour l’association, l’authentification ou la déconnexion ; les trames de \textit{contrôle}, destinées à réguler l’accès au point d'accès ; et les trames de \textit{données}, qui transportent l’information utilisateur ou les paquets réseau encapsulés. La plupart des attaques Wi-Fi tirent parti de la possibilité d’observer, d’injecter ou de manipuler ces différentes catégories de trames.
 
 Enfin, plusieurs notions cryptographiques apparaissent régulièrement dans ce chapitre. La \textbf{\acrfull{pmk}} constitue le secret partagé à partir duquel toutes les clés de session sont dérivées, tandis que la \textbf{\acrfull{ptk}} correspond à la clé spécifique à la connexion entre un client et un point d’accès. La \textbf{\acrfull{gtk}} est utilisée pour chiffrer le trafic multicast ou broadcast adressé à plusieurs stations. Ces clés sont produites ou échangées dans le cadre de mécanismes tel que le 4-Way \Gls{handshake}, qui sera détaillé dans les sections suivantes.
 
@@ -70,7 +70,7 @@ Ce mode connecte les stations (\acrshort{sta}) via un ou plusieurs points d'acc�
 
 \paragraph{Mode Ad hoc}
 
-Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un \acrshort{ssid}, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique étendent la portée en mode maillé, où chaque nœud route pour les autres.
+Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un \acrshort{ssid}, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique étendent la portée en mode maillé, où chaque noeud route pour les autres.
 
 \begin{figure}[H]
 \centering
@@ -110,7 +110,7 @@ Un \acrshort{ap} en mode pont relie d'autres \acrshort{ap} pour étendre un rés
 
 \paragraph{Mode Répéteur (Range-extender)}
 
-Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). L'interface Ethernet reste inactive, mais chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne).
+Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). Chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne).
 
 \begin{figure}[H]
 \centering
@@ -131,29 +131,27 @@ Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). L'
 \small
 \begin{tabular}{|l|l|c|c|}
 \hline
-\textbf{Mode} & \textbf{Lien principal} & \textbf{Ethernet} & \textbf{Usage} \\
+\textbf{Mode} & \textbf{Lien principal} & \textbf{Usage} \\
 \hline
-Infrastructure & STA $\rightarrow$ AP & \cmark & Internet \\
-Ad hoc & STA $\leftrightarrow$ STA & \xmark & Échange direct \\
-Pont & AP $\leftrightarrow$ AP (câble) & \cmark & Relier bâtiments \\
-Répéteur & WiFi répété & \xmark & Étendre portée \\
+Infrastructure & STA $\rightarrow$ AP  & Internet \\
+Ad hoc & STA $\leftrightarrow$ STA  & Échange direct \\
+Pont & AP $\leftrightarrow$ AP (câble) & Relier bâtiments \\
+Répéteur & WiFi répété & Étendre portée \\
 \hline
 \end{tabular}
 \caption{Modes Wi-Fi : synthèse}
 \label{tab:modes_wifi}
 \end{table}
 
-Ces modes fondamentaux conditionnent les mécanismes de sécurité analysés dans la suite, particulièrement en mode infrastructure dominant.
-
+Ces modes fondamentaux conditionnent les mécanismes de sécurité analysés dans la suite, particulièrement en mode infrastructure dominant. C'est d'ailleurs ce dernier mode qui sera étudié en particulier.
 
 % WEP
-
 
 \subsection{Sécurité Wi-Fi}
 
 \subsubsection{WEP : Wired Equivalent Privacy}
 
-\acrshort{wep} (1997) constitue la première tentative de sécuriser les communications Wi-Fi. Il a été conçu à une époque où la cryptographie grand public était encore émergente, et souffre aujourd'hui de nombreuses limitations. Son objectif était de fournir une confidentialité comparable à celle d'un réseau filaire, mais son fonctionnement s'est révélée profondément vulnérable.
+Le \acrlong{wep} (1997) constitue la première tentative de sécuriser les communications Wi-Fi. Il a été conçu à une époque où la cryptographie grand public était encore émergente, et souffre aujourd'hui de nombreuses limitations. Son objectif était de fournir une confidentialité comparable à celle d'un réseau filaire, mais son fonctionnement s'est révélée profondément vulnérable.
 
 \subsubsection*{Fonctionnement interne}
 
@@ -171,13 +169,13 @@ Le chiffrement d'un paquet se fait ainsi :
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[node distance=2cm]
-\node[draw, rounded corners, inner sep=3pt] (in) {Input};
+\node[draw, rounded corners, inner sep=3pt] (in) {Plaintext};
 \node[draw, rounded corners, right=of in, inner sep=3pt] (pt) {Plaintext + ICV};
 \node[draw, rounded corners, right=of pt, inner sep=3pt] (xor) {XOR};
 \node[draw, rounded corners, below=of xor, inner sep=3pt] (rc4) {RC4};
 \node[draw, rounded corners, left=of rc4, inner sep=3pt] (sk) {IV + SharedKey};
 \node[draw, rounded corners, right=of rc4, inner sep=3pt] (ct) {IV + Ciphertext};
-\node[draw, rounded corners, right=of ct, inner sep=3pt] (out) {Output};
+\node[draw, rounded corners, below=of ct, inner sep=3pt] (out) {Sortie};
 
 \draw[->] (in) -- (pt);
 \draw[->] (pt) -- (xor);
@@ -209,7 +207,7 @@ Le chiffrement d'un paquet se fait ainsi :
     minimum width=2.2cm,
     minimum height=1.1cm,
     align=center,
-    right=0.1cm of hdr
+    right=0.0cm of hdr
 ] (iv) {IV\\(24 bits)};
 
 \node[
@@ -217,15 +215,15 @@ Le chiffrement d'un paquet se fait ainsi :
     minimum width=4.8cm,
     minimum height=1.1cm,
     align=center,
-    right=0.1cm of iv
-] (data) {Données\\chiffrées (RC4)};
+    right=0.0cm of iv
+] (data) {Données chiffrées};
 
 \node[
     draw,
     minimum width=2.5cm,
     minimum height=1.1cm,
     align=center,
-    right=0.1cm of data
+    right=0.0cm of data
 ] (icv) {ICV\\(CRC-32)};
 
 \end{tikzpicture}
@@ -267,7 +265,7 @@ La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,00
 \subsubsection{WPA : Wi-Fi Protected Access}
 
 Face à la crise WEP, la Wi-Fi Alliance introduit en 2003 \acrshort{wpa} comme correctif transitoire, visant à remplacer les composants vulnérables tout en conservant le matériel existant (compatibilité ascendante).
-WPA s'appuie sur un problème de chiffrement nommé \acrfull{tkip}.
+WPA s'appuie sur un mécanisme de chiffrement nommé \acrfull{tkip}.
 
 \subsubsection*{Fonctionnement interne}
 
@@ -282,13 +280,11 @@ WPA introduit plusieurs mécanismes :
 
 \subsubsection*{Phases de WPA}
 
-Le protocole s'appuie sur une clé connue (appelée passphrase) par les \acrshort{sta} et l'\acrshort{ap}, nommée \acrfull{psk}. Il peut également, dans le cadre de \textit{WPA-Enterprise}, être généré via un serveur RADIUS.
-Ici, nous ne développerons que la méthode avec une passphrase connue par les deux parties.
-
-WPA corrige WEP par 3 étapes distinctes :\\
+Le protocole s'appuie sur une clé connue par les \acrshort{sta} et l'\acrshort{ap}, nommée \acrfull{psk} (aussi appelée \gls{passphrase}). Il peut également, dans le cadre de \textit{WPA-Enterprise}, être généré via un serveur RADIUS.
+Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par les deux parties.
 
 \begin{itemize}
-    \item \textbf{Phase 1 (\acrshort{pbkdf2} 4096 itérations)} : passphrase $\rightarrow$ \acrfull{pmk} résistante plus robuste. Cette clé n'est jamais utilisée directement, elle ne sert qu'à générer une clé temporaire.\\La fonction PBKDF2 utilise le SSID comme sel cryptographique et applique 4096 itérations de HMAC-SHA1. Ce mécanisme ralentit volontairement les tentatives de brute force, mais n'empêche pas les attaques hors ligne si la passphrase est faible et que le 4-Way Handshake est capturé.
+    \item \textbf{Phase 1 (\acrshort{pbkdf2} 4096 itérations)} : \gls{passphrase} $\rightarrow$ \acrfull{pmk}. Cette clé n'est jamais utilisée directement, elle ne sert qu'à générer une clé temporaire.\\La fonction PBKDF2 utilise le SSID comme sel cryptographique et applique 4096 itérations de HMAC-SHA1. Ce mécanisme ralentit volontairement les tentatives de brute force, mais n'empêche pas les attaques hors ligne si la \gls{passphrase} est faible et que le 4-Way Handshake est capturé.
 
 
     \begin{figure}[H]
@@ -297,7 +293,7 @@ WPA corrige WEP par 3 étapes distinctes :\\
         \begin{tikzpicture}[
             box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
         ]
-        \node[box] (psk) {\acrlong{psk}\\passphrase};
+        \node[box] (psk) {\acrlong{psk}\\\gls{passphrase}};
         \node[box, right=1.8cm of psk] (pbkdf2) {PBKDF2\\Dérivation de clé};
         \node[box, right=1.8cm of pbkdf2] (pmk) {Pairwise Master Key\\(256 bits)};
 
@@ -309,8 +305,8 @@ WPA corrige WEP par 3 étapes distinctes :\\
     \end{figure}
 
     
-    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrshort{mic} protègent).
-    \\Les nonces (\Gls{anonce}, générée par l'\acrshort{ap} et \Gls{snonce}, générée par la \acrshort{sta}) garantissent l'unicité de la PTK à chaque association, même si la PMK reste identique. Le \acrshort{mic}, calculé à l'aide de la clé \acrfull{kck}, assure l'intégrité et l'authenticité des messages du handshake.
+    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrfull{mic} protègent).
+    \\Les nonces (\Gls{anonce}, générée par l'\acrshort{ap} et \Gls{snonce}, générée par la \acrshort{sta}) garantissent l'unicité de la PTK à chaque association, même si la PMK reste identique. Le \acrshort{mic}, calculé à l'aide de la clé \acrfull{kck} (extraite de la PTK), assure l'intégrité et l'authenticité des messages du handshake.
 
     
     \begin{figure}[H]
@@ -363,14 +359,14 @@ WPA corrige WEP par 3 étapes distinctes :\\
     % Messages
     \draw[->] (ap.south)++(0,-0.5) -- node[above,sloped]{1. \Gls{anonce}} ++(-6,0);
     \draw[->] (sta.south)++(0,-2) -- node[above,sloped]{2. \Gls{snonce} + MIC} ++(6,0);
-    \draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK + MIC} ++(-6,0);
+    \draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{3. GTK (chiffré avec KEK) + MIC} ++(-6,0);
     \draw[->] (sta.south)++(0,-5) -- node[above,sloped]{4. Confirmation} ++(6,0);
 
     % Étapes locales STA (à gauche)
     \node[anchor=east, align=right, font=\footnotesize] 
     at (-0.2,-1.5) {%
     Dérivation de la PTK\\
-    Calcul du MIC
+    Calcul du MIC (avec \acrshort{kck})
     };
 
     \node[anchor=east, align=right, font=\footnotesize] 
@@ -384,7 +380,8 @@ WPA corrige WEP par 3 étapes distinctes :\\
     at (6.2,-3) {%
     Vérification du MIC\\
     Dérivation de la PTK\\
-    Génération de la GTK
+    Génération de la GTK\\
+    Calcul du MIC (avec \acrshort{kck})
     };
 
     \node[anchor=west, align=left, font=\footnotesize] 
@@ -434,7 +431,7 @@ WPA corrige WEP par 3 étapes distinctes :\\
         \hline
         PSK &
         Variable &
-        Passphrase partagée &
+        \Gls{passphrase} partagée &
         Pré-Phase &
         Manuel \\
 
@@ -499,10 +496,8 @@ Il assure à la fois :
 
 \medskip
 
-Dans WPA utilisant TKIP, le champ historiquement appelé \textbf{IV} ne correspond plus à un vecteur d’initialisation aléatoire comme en WEP.  
+Dans WPA utilisant TKIP, le champ appelé \textbf{IV} ne correspond plus à un vecteur d’initialisation aléatoire comme en WEP.  
 Il transporte en réalité une représentation structurée du \acrfull{tsc}, d’où le terme d’\textit{IV étendu}.
-
-Le TSC est un compteur de 48 bits, unique et incrémenté pour chaque trame émise. Il est utilisé pour générer une clé de chiffrement différente pour chaque paquet, ce qui empêche les attaques par rejouage et améliore la sécurité du protocole.  
 
 \paragraph{Composition de l'IV étendu (16 bits dans la trame) :}  
 Le champ IV envoyé dans la trame est une version codée et partielle du TSC, combinée avec le KeyID et quelques bits de contrôle :
@@ -511,7 +506,7 @@ Le champ IV envoyé dans la trame est une version codée et partielle du TSC, co
     \item \textbf{IV16 (bits 0-15) :} Correspond aux 16 bits de poids faible du TSC. Ces bits changent à chaque trame et garantissent l’unicité de la clé RC4 pour cette trame.  
     \item \textbf{IV8 (bits 16-23) :} Contient les 8 bits suivants du TSC.  
     \item \textbf{KeyID (2 bits) :} Ce champ identifie quelle clé de chiffrement parmi les clés partagées par le point d’accès et le client doit être utilisée pour cette trame. Il permet au récepteur de savoir quelle clé appliquer pour déchiffrer le paquet.  
-    \item \textbf{Ext. IV / Reserved (6 bits) :} Ce champ complète le TSC en incluant les bits de poids fort (pour former les 48 bits du compteur de séquence) et peut également contenir des indicateurs de fragmentation ou des bits réservés pour la compatibilité. Il garantit l’unicité de la clé de chiffrement pour chaque trame et permet de gérer correctement les trames fragmentées.
+    \item \textbf{Ext. IV / Reserved (6 bits) :} Ce champ complète le TSC en incluant les bits de poids fort (pour former les 48 bits du compteur de séquence) et peut également contenir des indicateurs de fragmentation ou des bits réservés pour la compatibilité.
 \end{itemize}
 
 \medskip
@@ -527,8 +522,7 @@ La première phase combine :
     \item les \textbf{32 bits de poids fort du TSC} (\( \text{TSC}[47:16] \)).
 \end{itemize}
 
-Cette étape produit une \textbf{clé intermédiaire} spécifique à la station émettrice et au flot de transmission.  
-Comme les bits de poids fort du TSC évoluent lentement, cette phase limite efficacement les collisions de clés tout en restant peu coûteuse en calcul.
+Cette étape produit une \textbf{clé intermédiaire} spécifique à la station émettrice et au flot de transmission. 
 
 \medskip
 \noindent
@@ -536,18 +530,18 @@ Comme les bits de poids fort du TSC évoluent lentement, cette phase limite effi
 La seconde phase affine cette clé intermédiaire en intégrant :
 \begin{itemize}
     \item les \textbf{16 bits de poids faible du TSC} (\( \text{TSC}[15:0] \)) ;
-    \item des \textbf{bits de contrôle de l’IV}, notamment le bit \textit{ExtIV} et des bits destinés à éviter les IV faibles connus de RC4.
+    \item des \textbf{bits de contrôle de l’IV}, notamment le bit \textit{ExtIV} et des bits destinés à éviter les IV faibles (nommées \textit{d}).
 \end{itemize}
 
-Cette phase produit la \textbf{clé finale par trame}, appelée \acrshort{ppk}, utilisée comme entrée de l’algorithme RC4.  
+Cette phase produit la \textbf{clé finale par trame}, appelée \acrfull{ppk}, utilisée comme entrée de l’algorithme RC4.  
 Ainsi, même deux trames consécutives émises par une même station ne partageront jamais la même clé de chiffrement.
 
 \medskip
-Avant le chiffrement, un \acrfull{mic} est calculé sur les données en clair à l’aide de l’algorithme \textbf{Michael}.  
+Avant le chiffrement, un \acrshort{mic} est calculé sur les données en clair à l’aide de l’algorithme \textbf{Michael}.  
 Ce MIC protège la trame contre les modifications actives et est concaténé aux données avant le calcul de l’\acrshort{icv} (CRC-32).
 
 \medskip
-L’ensemble \textit{(données || MIC || ICV)} est finalement chiffré par un XOR avec le flot de clés généré par RC4, produisant la trame WPA-TKIP transmise sur le médium radio.
+L’ensemble \textit{(données || MIC || ICV)} est finalement chiffré par un XOR avec le flot de clés généré par RC4, produisant la trame WPA-TKIP transmise.
 
 \newpage
 
@@ -685,117 +679,62 @@ WPA2 apporte une amélioration profonde : l’abandon de RC4 au profit d’un ch
 
 \subsubsection*{Modes d’authentification}
 \begin{itemize}
-    \item \textbf{WPA2-PSK} : la PMK (\textit{Pairwise Master Key} : clé maitresse) = PBKDF2(\textit{Password-Based Key Derivation Function 2} : basée sur une passphrase et le SSID).
+    \item \textbf{WPA2-PSK} : la PMK (\textit{Pairwise Master Key} : clé maitresse) = PBKDF2(\textit{Password-Based Key Derivation Function 2} : basée sur une \gls{passphrase} et le SSID).
     \item \textbf{WPA2-Enterprise} : PMK fournie via un serveur RADIUS et une authentification EAP.
 \end{itemize}
-
-% CCMP frame format
-
-\subsubsection*{Format d'une trame CCMP (WPA2)}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-\node[draw, minimum width=3cm] (hdr) {802.11 Header};
-\node[draw, minimum width=2cm, right=0cm of hdr] (pn) {PN};
-\node[draw, minimum width=2cm, right=0cm of pn] (ccmp) {CCMP Header};
-\node[draw, minimum width=4cm, right=0cm of ccmp] (data) {Payload (AES-CTR)};
-\node[draw, minimum width=3cm, right=0cm of data] (mic) {MIC (CBC-MAC)};
-\end{tikzpicture}
-\caption{Structure d'une trame CCMP}
-\end{figure}
-
 
 % WPA3 / SAE
 
 \subsubsection{WPA3 : SAE, Dragonfly, GCMP et PMF}
 
-WPA3 corrige des failles structurelles de WPA2, notamment KRACK, en introduisant SAE (Dragonfly), OWE, PMF obligatoire, et le support obligatoire de GCMP dans certaines suites.
-
-\subsubsection*{Handshake SAE (Dragonfly)}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[>=latex]
-
-\node (sta) at (0,0) {Client};
-\node (ap)  at (6,0) {AP};
-
-\draw (sta.south) -- ++(0,-4);
-\draw (ap.south)  -- ++(0,-4);
-
-\draw[->] (sta.south)++(0,-0.5) -- node[above,sloped]{Commit (scalar, element)} ++(6,0);
-\draw[->] (ap.south)++(0,-1.5) -- node[above,sloped]{Commit (scalar, element)} ++(-6,0);
-\draw[->] (sta.south)++(0,-2.5) -- node[above,sloped]{Confirm} ++(6,0);
-\draw[->] (ap.south)++(0,-3.5) -- node[above,sloped]{Confirm} ++(-6,0);
-
-\end{tikzpicture}
-\caption{Handshake SAE (WPA3)}
-\end{figure}
-
+WPA3 corrige des failles structurelles de WPA2, notamment KRACK, en introduisant SAE (Authenfication mutuelle des \acrshort{ap} et de la \acrshort{sta}) et le support obligatoire de l'algorithme de chiffrement GCMP.
 
 % SAE / GCMP crypto details
 
 \subsection{Mécanismes cryptographiques avancés}
 
-Les protocoles de sécurité modernes du Wi-Fi reposent sur des mécanismes cryptographiques plus élaborés que ceux utilisés par les générations précédentes. Contrairement à WEP et TKIP, qui n’offraient qu’une protection minimale contre l’écoute, l’injection ou la manipulation des trames, WPA2 et surtout WPA3 reposent sur des constructions cryptographiques complètes, conçues pour fournir à la fois confidentialité, intégrité, résistance aux attaques par rejeu et garanties formelles sur la sécurité de la session. Trois mécanismes occupent une place centrale : AES-CCMP, GCMP et SAE (aussi appelé Dragonfly). Ces primitives ne jouent pas le même rôle, mais constituent ensemble la base de la sécurité Wi-Fi contemporaine.
+Les protocoles de sécurité modernes du Wi-Fi reposent sur des mécanismes cryptographiques plus élaborés que ceux utilisés par les générations précédentes. Contrairement à WEP et TKIP, qui n’offraient qu’une protection minimale contre l’écoute, l’injection ou la manipulation des trames, WPA2 et surtout WPA3 reposent sur des constructions cryptographiques complètes, conçues pour fournir à la fois confidentialité, intégrité, résistance aux attaques par rejeu et garanties formelles sur la sécurité de la session.\\
+
+Trois mécanismes occupent une place centrale : AES-CCMP, GCMP et SAE (aussi appelé Dragonfly). Ces protocoles ne jouent pas le même rôle, mais constituent ensemble la base de la sécurité Wi-Fi contemporaine.
 
 \subsubsection{AES-CCMP}
 
 AES-CCMP est devenu la norme de chiffrement par défaut avec WPA2. Son objectif est d’aller bien au-delà du simple masquage des données transportées : il assure simultanément la confidentialité des informations, l’intégrité des trames et la protection contre les attaques par rejeu.
 
-Pour y parvenir, CCMP combine deux éléments complémentaires. D’une part, il utilise AES en mode compteur (CTR) pour le chiffrement. Ce mode transforme le bloc AES en générateur de flot chiffrant, permettant de chiffrer efficacement des paquets de taille variable sans introduire de structure exploitable. De l’autre, CCMP associe ce chiffrement à un code d’authentification basé sur CBC-MAC, un mécanisme cryptographique destiné à garantir que les données n’ont subi aucune altération. Cette combinaison forme une construction dite \textit{AEAD} (Authenticated Encryption with Associated Data), dans laquelle confidentialité et intégrité sont assurées simultanément par une même clé, ce qui évite un grand nombre de vulnérabilités présentes dans les générations antérieures.
+Pour y parvenir, CCMP combine deux éléments complémentaires. D’une part, il utilise AES en mode compteur (CTR) pour le chiffrement. Ce mode transforme le bloc AES en générateur de flot chiffrant, permettant de chiffrer efficacement des paquets de taille variable sans introduire de structure exploitable. De l’autre, CCMP associe ce chiffrement à un code d’authentification basé sur CBC-MAC, un mécanisme cryptographique destiné à garantir que les données n’ont subi aucune altération.\\
+
+Cette combinaison forme une construction dite \textit{AEAD} (Authenticated Encryption with Associated Data), dans laquelle confidentialité et intégrité sont assurées simultanément par une même clé, ce qui évite un grand nombre de vulnérabilités présentes dans les générations antérieures.
 
 L’ensemble repose également sur un numéro de paquet (Packet Number, PN) utilisé comme nonce unique. Toute réutilisation est interdite, ce qui empêche un attaquant de rejouer ou de réinjecter des trames chiffrées. En pratique, AES-CCMP constitue encore aujourd’hui une référence en matière de chiffrement pour les réseaux Wi-Fi.
 
 AES-CCMP combine :
 \begin{itemize}
     \item AES en mode CTR pour le chiffrement ;
-    \item CBC-MAC pour l'intégrité (authentification).
+    \item CBC-MAC pour l'intégrité.
 \end{itemize}
-C'est une construction AEAD robuste, largement testée.
 
 \subsubsection{GCMP (AES-GCM)}
 
-GCMP, introduit avec les standards 802.11ac et repris dans WPA3-Enterprise, reprend les principes d’AES-CCMP mais s’appuie cette fois sur AES-GCM. Cette construction fait partie des modes de chiffrement AEAD les plus étudiés et les plus robustes. AES-GCM associe un chiffrement en mode CTR à la fonction d’authentification GHASH, reposant sur des opérations arithmétiques dans un corps de Galois. Cette approche permet de calculer l’intégrité et le chiffrement de façon quasi parallèle, ce qui rend GCMP particulièrement performant sur les architectures modernes.
+GCMP, introduit avec les standards 802.11ac et repris dans WPA3-Enterprise, reprend les principes d’AES-CCMP mais s’appuie cette fois sur AES-GCM. Cette construction fait partie des modes de chiffrement AEAD les plus robustes. AES-GCM associe un chiffrement en mode CTR à la fonction d’authentification GHASH. Cette approche permet de calculer l’intégrité et le chiffrement de façon quasi parallèle, ce qui rend GCMP particulièrement performant sur les architectures modernes.\\
 
-L’intérêt principal de GCMP réside donc dans sa rapidité : il offre un débit supérieur à CCMP, ce qui le rend bien adapté aux environnements à forte charge ou aux réseaux professionnels nécessitant des débits élevés. Il reste néanmoins sensible aux erreurs d’implémentation, comme l’ont montré certaines variantes des attaques Dragonblood qui ciblaient directement GCMP-128 lorsque les nonces n’étaient pas utilisés correctement. Malgré cela, GCMP demeure une brique cryptographique robuste lorsqu’il est correctement mis en œuvre.
+L’intérêt principal de GCMP réside donc dans sa rapidité : il offre un débit supérieur à CCMP, ce qui le rend bien adapté aux environnements à forte charge ou aux réseaux professionnels nécessitant des débits élevés.
 
 \subsubsection{SAE / Dragonfly}
 
+Contrairement à AES-CCMP et à GCMP, qui sont des mécanismes de chiffrement et d’intégrité utilisés \emph{après} l’établissement de la connexion, SAE (Simultaneous Authentication of Equals) intervient au moment de l’authentification. SAE n’est pas un algorithme de chiffrement mais un protocole d’échange de clés sécurisé.
 
-Contrairement à AES-CCMP et à GCMP, qui sont des mécanismes de chiffrement et d’intégrité utilisés \emph{après} l’établissement de la connexion, SAE (Simultaneous Authentication of Equals) intervient au moment de l’authentification. SAE n’est pas un algorithme de chiffrement mais un protocole d’échange de clés sécurisé, faisant partie de la famille des PAKE (Password-Authenticated Key Exchange).
+L’enjeu de SAE est de résoudre l’un des problèmes fondamentaux des versions antérieures : avec WPA2-PSK, un attaquant pouvait capturer un 4-Way Handshake puis tenter hors ligne de retrouver le mot de passe par dictionnaire. Dans SAE, ce type d’attaque est impossible. Le protocole s'appuie sur un échange Diffie–Hellman, dans lequel le mot de passe n'est jamais transmis ni dérivé sous forme exploitable. Chaque tentative d’authentification nécessite une interaction en temps réel avec le point d’accès, ce qui empêche les attaques hors ligne et limite naturellement la vitesse des tests possibles.\\
 
-L’enjeu de SAE est de résoudre l’un des problèmes fondamentaux des versions antérieures : avec WPA2-PSK, un attaquant pouvait capturer un 4-Way Handshake puis tenter hors ligne de retrouver le mot de passe par dictionnaire. Dans SAE, ce type d’attaque est impossible. Le protocole s'appuie sur un échange Diffie–Hellman (sur groupes modp ou courbes elliptiques), dans lequel le mot de passe n'est jamais transmis ni dérivé sous forme exploitable. Chaque tentative d’authentification nécessite une interaction en temps réel avec le point d’accès, ce qui empêche les attaques hors ligne et limite naturellement la vitesse des tests possibles.
-
-SAE offre également la propriété de \textit{Forward Secrecy} : même si un mot de passe venait à être compromis ultérieurement, les sessions passées resteraient inexploitables, car la clé de session résulte d’un secret éphémère renouvelé à chaque connexion. Cette approche corrige l’une des failles conceptuelles les plus importantes de WPA2 et constitue la principale amélioration de WPA3-Personal.
+SAE offre également la propriété de \textit{Forward Secrecy} : même si un mot de passe venait à être compromis ultérieurement, les sessions passées resteraient inexploitables, car la clé de session résulte d’un secret éphémère renouvelé à chaque connexion. Cette approche corrige l’une des failles les plus importantes de WPA2 et constitue la principale amélioration de WPA3-Personal.
 
 Pour résumer, ses caractériques principales sont les suivantes :
 
 \begin{itemize}
-    \item s’appuie sur Diffie-Hellman (modp ou ECC) ;
+    \item s’appuie sur Diffie-Hellman ;
     \item offre Forward Secrecy ;
     \item empêche les attaques hors-ligne ;
     \item protège contre attaques dictionnaires massives.
 \end{itemize}
-
-
-% Format de trame GCMP
-
-\subsubsection*{Format d'une trame GCMP}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-\node[draw, minimum width=3cm] (hdr) {802.11 Header};
-\node[draw, minimum width=2cm, right=0cm of hdr] (pn) {PN};
-\node[draw, minimum width=2cm, right=0cm of pn] (gcmp) {GCMP Header};
-\node[draw, minimum width=4cm, right=0cm of gcmp] (data) {Payload (AES-GCM)};
-\node[draw, minimum width=3cm, right=0cm of data] (tag) {Tag (128 bits)};
-\end{tikzpicture}
-\caption{Structure d'une trame GCMP (WPA3)}
-\end{figure}
-
 
 % Synthesis table
 
@@ -810,8 +749,7 @@ Pour résumer, ses caractériques principales sont les suivantes :
 WEP & RC4 & Clé statique & CRC-32 & Nulle \\
 WPA & RC4 & PSK & MIC & Faible \\
 WPA2 & AES-CCMP & PSK/802.1X & CBC-MAC & Forte (hors KRACK) \\
-WPA3 & AES-CCMP/GCMP & SAE/802.1X & PMF & Très forte \\
-OWE & Diffie-Hellman & Aucune & CCMP/GCMP & Élevée \\
+WPA3 & GCMP & SAE/802.1X & PMF & Très forte \\
 \hline
 \end{tabular}
 \caption{Comparaison des protocoles de sécurité Wi-Fi}

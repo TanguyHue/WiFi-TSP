@@ -4,26 +4,26 @@
 La sécurité des réseaux Wi-Fi constitue un domaine d’étude central en cybersécurité, en raison de
 l’omniprésence des technologies sans fil dans les environnements professionnels, industriels et
 domestiques. Depuis l’introduction du standard IEEE 802.11 en 1997, la surface d’attaque associée
-aux réseaux Wi-Fi n’a cessé de croître, sous l’effet conjugué de l’évolution des protocoles, de la
-diversité des implémentations matérielles et logicielles, et de la généralisation des usages mobiles.
+aux réseaux Wi-Fi n’a cessé de croître, sous les effets de l’évolution des protocoles, de la
+diversité des implémentations matérielles et logicielles, et de la généralisation des usages mobiles.\\
 
-Contrairement aux réseaux filaires, les communications Wi-Fi reposent sur un médium radio
-ouvert, accessible à toute entité située dans la zone de couverture du point d’accès. Cette
-caractéristique intrinsèque expose les échanges à des menaces spécifiques telles que l’écoute
+Contrairement aux réseaux filaires, les communications Wi-Fi reposent sur des ondes radios, 
+accessible à tout appareil situé dans la zone de couverture du point d’accès. Cette caractéristique
+ expose les échanges à des menaces spécifiques telles que l’écoute
 passive, l’injection de trames, l’usurpation d’identité réseau, ou encore les attaques de type
 \textit{Man-in-the-Middle}. La sécurité des réseaux Wi-Fi ne dépend donc pas uniquement de la
 robustesse des mécanismes cryptographiques employés, mais également de la qualité des
-implémentations, des configurations retenues et des pratiques opérationnelles adoptées.
+implémentations, des configurations retenues et des pratiques opérationnelles adoptées.\\
 
 L’histoire de la sécurité Wi-Fi illustre une succession de mécanismes de protection introduits
 progressivement pour corriger les vulnérabilités des protocoles précédents. Chaque nouvelle
 génération de protocoles a apporté des améliorations significatives en matière de confidentialité,
 d’intégrité et d’authentification, mais a également donné naissance à de nouvelles catégories
 d’attaques exploitant des faiblesses cryptographiques, protocolaires ou humaines. Ainsi, les
-attaques statistiques ayant compromis WEP ont laissé place à des attaques ciblant les mécanismes
-d’authentification de WPA, puis à des attaques protocolaires plus subtiles contre WPA2, avant
+attaques statistiques ayant compromis \acrshort{wep} ont laissé place à des attaques ciblant les mécanismes
+d’authentification de \acrshort{wpa}, puis à des attaques protocolaires plus subtiles contre \acrshort{wpa2}, avant
 l’émergence de vulnérabilités liées aux implémentations et aux canaux auxiliaires dans les versions
-les plus récentes.
+les plus récentes.\\
 
 Cet état de l’art se concentre exclusivement sur les attaques Wi-Fi, les protocoles ayant été
 présentés dans la section précédente. Il propose une analyse structurée des principales familles
@@ -36,221 +36,220 @@ suite de ce projet.
 \subsection{Évolution historique des attaques contre les réseaux Wi-Fi}
 
 L’évolution des attaques contre les réseaux Wi-Fi est étroitement liée à celle des protocoles de
-sécurité déployés pour protéger les communications sans fil. Dès l’apparition du protocole WEP
-(\textit{Wired Equivalent Privacy}), introduit avec la première version du standard IEEE 802.11 en
+sécurité déployés pour protéger les communications sans fil. Dès l’apparition du protocole \acrshort{wep}, 
+introduit avec la première version du standard IEEE 802.11 en
 1997, de nombreuses vulnérabilités ont été mises en évidence, révélant les limites des mécanismes
-cryptographiques alors utilisés.
+cryptographiques alors utilisés.\\
 
-WEP repose sur l’algorithme de chiffrement par flot RC4, combiné à des vecteurs d’initialisation
-(IV) de seulement 24 bits. Cette taille réduite entraîne une réutilisation fréquente des IV sur des
+\acrshort{wep} repose sur l’algorithme de chiffrement par flot \acrshort{rc4}, combiné à des \acrfull{iv} de seulement 24 bits. Cette taille réduite entraîne une réutilisation fréquente des \acrshort{iv} sur des
 réseaux actifs, ouvrant la voie à des attaques statistiques permettant de récupérer progressivement
-la clé de chiffrement. Les travaux de Fluhrer, Mantin et Shamir ont démontré qu’il était possible
-d’exploiter certaines faiblesses du générateur de clés RC4 pour reconstruire la clé WEP à partir
-d’un volume suffisant de trafic capturé. Ces attaques ont été rapidement automatisées par des
-outils spécialisés, rendant la compromission d’un réseau WEP accessible avec des moyens limités.
-Face à ces vulnérabilités structurelles, WEP a été officiellement déclaré obsolète au début des
-années 2000.
+la clé de chiffrement. Ces attaques ont été rapidement automatisées par des
+outils spécialisés, rendant la compromission d’un réseau \acrshort{wep} accessible avec des moyens limités.
+Face à ces vulnérabilités structurelles, \acrshort{wep} a été officiellement déclaré obsolète au début des
+années 2000.\\
 
 Afin de répondre à l’urgence sécuritaire sans imposer un renouvellement massif des équipements,
-la Wi-Fi Alliance a introduit WPA (\textit{Wi-Fi Protected Access}) comme solution transitoire.
-WPA s’appuie sur le protocole TKIP (\textit{Temporal Key Integrity Protocol}), qui conserve RC4
+la Wi-Fi Alliance a introduit \acrshort{wpa} comme solution transitoire.
+\acrshort{wpa} s’appuie sur le protocole \acrshort{tkip}, qui conserve \acrshort{rc4}
 mais introduit un mécanisme de renouvellement dynamique des clés, un compteur de séquence et
-un code d’intégrité des messages. Bien que WPA ait significativement élevé le niveau de sécurité
-par rapport à WEP, plusieurs attaques ont montré que cette solution restait vulnérable, notamment
+un code d’intégrité des messages. Bien que \acrshort{wpa} ait significativement élevé le niveau de sécurité
+par rapport à \acrshort{wep}, plusieurs attaques ont montré que cette solution restait vulnérable, notamment
 en raison de son héritage cryptographique et de certaines faiblesses dans la gestion de l’intégrité
-des trames.
+des \glspl{trame}.\\
 
-La normalisation de WPA2 en 2004, dans le cadre du standard IEEE 802.11i, marque une étape
-majeure dans la sécurisation des réseaux Wi-Fi. WPA2 abandonne RC4 au profit de l’algorithme
+La normalisation de \acrshort{wpa2} en 2004 marque une étape
+majeure dans la sécurisation des réseaux Wi-Fi. \acrshort{wpa2} abandonne \acrshort{rc4} au profit de l’algorithme
 AES dans le mode CCMP, offrant une protection complète en matière de confidentialité,
-d’intégrité et de protection contre les attaques par rejeu. Pendant plusieurs années, WPA2 a été
+d’intégrité et de protection contre les attaques par rejeu. Pendant plusieurs années, \acrshort{wpa2} a été
 considéré comme un mécanisme de sécurité robuste, largement déployé dans les environnements
 professionnels et grand public. Toutefois, la découverte de l’attaque KRACK en 2017 a mis en
 évidence une faiblesse conceptuelle du protocole, exploitant la possibilité de rejouer certaines
-étapes du \textit{4-Way Handshake} afin de forcer la réinstallation de clés de chiffrement déjà
-utilisées.
+étapes du \gls{handshake} afin de forcer la réinstallation de clés de chiffrement déjà
+utilisées.\\
 
 Ces travaux ont démontré que, même en l’absence de failles cryptographiques directes, des erreurs
 de conception protocolaire peuvent conduire à des vulnérabilités exploitables. En réponse à ces
-constats, WPA3 a été introduit en 2018 avec des mécanismes d’authentification renforcés,
+constats, \acrshort{wpa3} a été introduit en 2018 avec des mécanismes d’authentification renforcés,
 notamment l’utilisation du protocole SAE (\textit{Simultaneous Authentication of Equals}) et
 l’obligation des \textit{Protected Management Frames}. Néanmoins, la coexistence prolongée de
-WPA2 et WPA3 dans des environnements mixtes maintient une surface d’attaque significative,
+\acrshort{wpa2} et \acrshort{wpa3} dans des environnements mixtes maintient une surface d’attaque significative,
 justifiant l’étude approfondie des attaques visant les protocoles encore largement déployés.
 
-\subsection{Attaques contre WEP : premières vulnérabilités des réseaux Wi-Fi}
+\subsection{Attaques par protocole}
 
-Le protocole WEP (\textit{Wired Equivalent Privacy}) a constitué la première tentative de
+\subsubsection{Attaques contre WEP : premières vulnérabilités des réseaux Wi-Fi}
+
+Le protocole \acrshort{wep} a constitué la première tentative de
 sécurisation des réseaux Wi-Fi lors de l’introduction du standard IEEE 802.11. Conçu pour offrir
-un niveau de confidentialité comparable à celui des réseaux filaires, WEP repose sur
-l’algorithme de chiffrement par flot RC4, combiné à une clé secrète partagée et à un vecteur
-d’initialisation (IV) de 24 bits transmis en clair dans chaque trame. Cette conception s’est
-rapidement révélée inadaptée face aux contraintes spécifiques des réseaux sans fil.
+un niveau de confidentialité comparable à celui des réseaux filaires, \acrshort{wep} repose sur
+l’algorithme de chiffrement par flot \acrshort{rc4}, combiné à une clé secrète partagée et à un \acrfull{iv} de 24 bits transmis en clair dans chaque \gls{trame}. Cette conception s’est
+rapidement révélée inadaptée face aux contraintes spécifiques des réseaux sans fil.\\
 
-La principale faiblesse de WEP réside dans la gestion des vecteurs d’initialisation. En raison de
+La principale faiblesse de \acrshort{wep} réside dans la gestion des vecteurs d’initialisation. En raison de
 leur taille réduite, les IV sont rapidement réutilisés sur des réseaux actifs, ce qui permet à un
 attaquant passif de collecter un grand nombre de trames chiffrées utilisant des clés de flot
 identiques. Cette réutilisation constitue le fondement des attaques statistiques visant à
-reconstruire la clé secrète sans jamais la deviner directement.
+reconstruire la clé secrète sans jamais la deviner directement.\\
 
-Les travaux de Fluhrer, Mantin et Shamir ont mis en évidence une vulnérabilité structurelle du
-générateur de clés de RC4 lorsqu’il est utilisé avec des IV faiblement aléatoires. L’attaque dite
+Les travaux de Fluhrer, Mantin et Shamir\cite{FluhrerM7:online} ont mis en évidence une vulnérabilité structurelle du
+générateur de clés de \acrshort{rc4} lorsqu’il est utilisé avec des IV faiblement aléatoires. L’attaque dite
 FMS exploite des corrélations entre certains octets du flot de clés et la clé secrète, permettant,
-après l’analyse d’un volume suffisant de trafic, de reconstituer progressivement la clé WEP.
+après l’analyse d’un volume suffisant de trafic, de reconstituer progressivement la clé \acrshort{wep}.
 Cette attaque a démontré qu’un chiffrement théoriquement solide pouvait être compromis par
-une mauvaise intégration protocolaire.
+une mauvaise intégration protocolaire.\\
 
-D’autres attaques ont rapidement émergé pour exploiter les faiblesses de WEP. Les attaques par
+D’autres attaques ont rapidement émergé pour exploiter les faiblesses de \acrshort{wep}. Les attaques par
 fragmentation tirent parti de la capacité du protocole 802.11 à fragmenter les trames, permettant
 à un attaquant de récupérer des portions de flot de chiffrement et de forger des paquets
 arbitraires. L’attaque ChopChop repose quant à elle sur une technique itérative consistant à
-tronquer progressivement une trame chiffrée et à observer les réponses du point d’accès afin de
-déduire le contenu en clair octet par octet. Ces attaques démontrent que WEP ne garantit ni la
-confidentialité ni l’intégrité des données transmises.
+tronquer progressivement une \gls{trame} chiffrée et à observer les réponses du point d’accès afin de
+déduire le contenu en clair octet par octet. Ces attaques démontrent que \acrshort{wep} ne garantit ni la
+confidentialité ni l’intégrité des données transmises.\\
 
 L’automatisation de ces techniques par des outils tels qu’AirSnort ou Aircrack-ng a rendu le
-cassage de clés WEP accessible avec des moyens matériels limités et dans des délais très courts,
-souvent de l’ordre de quelques minutes. Face à l’accumulation de ces vulnérabilités, WEP a été
+cassage de clés \acrshort{wep} accessible avec des moyens matériels limités et dans des délais très courts,
+souvent de l’ordre de quelques minutes. Face à l’accumulation de ces vulnérabilités, \acrshort{wep} a été
 officiellement déclaré obsolète, et son utilisation est aujourd’hui considérée comme totalement
-insecure.
+non-sécurisée.\\
 
-Bien que WEP ne soit plus déployé dans les environnements modernes, l’étude de ses attaques
+Bien que \acrshort{wep} ne soit plus déployé dans les environnements modernes, l’étude de ses attaques
 reste pertinente d’un point de vue pédagogique. Elles illustrent les conséquences d’une
 mauvaise gestion des aléas cryptographiques et constituent le point de départ historique des
 attaques Wi-Fi, ayant directement influencé la conception des protocoles de sécurité
 ultérieurs.
 
-\subsection{Attaques contre WPA et TKIP : limites des solutions transitoires}
+\subsubsection{Attaques contre WPA et TKIP : limites des solutions transitoires}
 
-Face à l’obsolescence rapide de WEP, la Wi-Fi Alliance a introduit en 2003 le protocole WPA
-(\textit{Wi-Fi Protected Access}) comme mécanisme de sécurisation transitoire, dans l’attente de la
-finalisation du standard IEEE 802.11i. L’objectif principal de WPA était de corriger les faiblesses
-les plus critiques de WEP tout en restant compatible avec les équipements existants, via une mise
-à jour logicielle. Pour ce faire, WPA repose sur le protocole TKIP (\textit{Temporal Key Integrity
-Protocol}), qui conserve l’algorithme RC4 mais en modifie profondément l’usage.
+Face à l’obsolescence rapide de \acrshort{wep}, la Wi-Fi Alliance a introduit en 2003 le protocole \acrshort{wpa}
+comme mécanisme de sécurisation transitoire, dans l’attente de la
+finalisation du standard IEEE 802.11i. L’objectif principal de \acrshort{wpa} était de corriger les faiblesses
+les plus critiques de \acrshort{wep} tout en restant compatible avec les équipements existants, via une mise
+à jour logicielle. Pour ce faire, \acrshort{wpa} repose sur le protocole \acrfull{tkip}, qui conserve l’algorithme \acrshort{rc4} mais en modifie profondément l’usage.\\
 
-TKIP introduit plusieurs améliorations majeures par rapport à WEP. Il met en œuvre un
+\acrshort{tkip} introduit plusieurs améliorations majeures par rapport à \acrshort{wep}. Il met en œuvre un
 mécanisme de mélange de clés visant à produire une clé de chiffrement distincte pour chaque
-trame, à partir d’une clé maîtresse partagée et de paramètres dynamiques. Il ajoute également un
+\gls{trame}, à partir d’une clé maîtresse partagée et de paramètres dynamiques. Il ajoute également un
 compteur de séquence étendu afin de prévenir les attaques par rejeu, ainsi qu’un code d’intégrité
-des messages, appelé MIC (\textit{Message Integrity Code}), destiné à détecter les modifications
-non autorisées des trames.
+des messages, appelé \acrfull{mic}, destiné à détecter les modifications
+non autorisées des trames.\\
 
-Malgré ces améliorations, WPA/TKIP conserve des faiblesses structurelles héritées de WEP, en
-particulier l’utilisation de RC4 et certaines limitations dans la conception du mécanisme
-d’intégrité. Plusieurs attaques ont démontré que TKIP ne garantissait pas une sécurité
+Malgré ces améliorations, \acrshort{wpa}/\acrshort{tkip} conserve des faiblesses structurelles héritées de \acrshort{wep}, en
+particulier l’utilisation de \acrshort{rc4} et certaines limitations dans la conception du mécanisme
+d’intégrité. Plusieurs attaques ont démontré que \acrshort{tkip} ne garantissait pas une sécurité
 cryptographique suffisante face à des attaquants déterminés. L’attaque Beck-Tews, publiée en
 2008, exploite une faiblesse dans le traitement des paquets QoS pour permettre le déchiffrement
 et l’injection de trames de petite taille. Cette attaque combine une variante de l’attaque
-ChopChop avec l’exploitation des limites du MIC, rendant possible la falsification de trafic
-chiffré en un temps relativement court.
+ChopChop avec l’exploitation des limites du \acrfull{mic}, rendant possible la falsification de trafic
+chiffré en un temps relativement court.\\
 
-Ces attaques ont mis en évidence le caractère fondamentalement transitoire de WPA. Bien que
-plus robuste que WEP, WPA/TKIP ne constitue pas une solution pérenne, en raison de ses choix
+Ces attaques ont mis en évidence le caractère fondamentalement transitoire de \acrshort{wpa}. Bien que
+plus robuste que \acrshort{wep}, \acrshort{wpa}/\acrshort{tkip} ne constitue pas une solution pérenne, en raison de ses choix
 cryptographiques contraints par la rétrocompatibilité matérielle. La découverte de vulnérabilités
-exploitables a conduit à l’interdiction progressive de TKIP dans les déploiements modernes et à
+exploitables a conduit à l’interdiction progressive de \acrshort{tkip} dans les déploiements modernes et à
 son déclassement au profit de mécanismes reposant sur des algorithmes de chiffrement par bloc
-plus robustes.
+plus robustes.\\
 
-L’étude des attaques contre WPA et TKIP demeure néanmoins pertinente, car elle illustre les
+L’étude des attaques contre \acrshort{wpa} et \acrshort{tkip} demeure néanmoins pertinente, car elle illustre les
 limites des approches correctives incrémentales en matière de sécurité. Elle souligne également
 l’importance de concevoir des protocoles reposant sur des fondations cryptographiques solides
 plutôt que sur des adaptations de mécanismes déjà fragilisés, un principe qui guidera la
-conception de WPA2 et des protocoles ultérieurs.
+conception de \acrshort{wpa2} et des protocoles ultérieurs.
 
-\subsection{Attaques contre WPA2 : exploitation du \textit{4-Way Handshake}}
+\subsubsection{Attaques contre WPA2 : exploitation du 4-Way Handshake}
 
-La standardisation de WPA2 en 2004, dans le cadre du protocole IEEE 802.11i, a marqué une étape
-majeure dans la sécurisation des réseaux Wi-Fi. En remplaçant RC4 par l’algorithme AES utilisé
-dans le mode CCMP, WPA2 apporte une amélioration significative en matière de confidentialité,
-d’intégrité et de protection contre les attaques par rejeu. WPA2 s’est ainsi imposé comme le
+La standardisation de \acrshort{wpa2} en 2004, dans le cadre du protocole IEEE 802.11i, a marqué une étape
+majeure dans la sécurisation des réseaux Wi-Fi. En remplaçant \acrshort{rc4} par l’algorithme AES utilisé
+dans le mode CCMP, \acrshort{wpa2} apporte une amélioration significative en matière de confidentialité,
+d’intégrité et de protection contre les attaques par rejeu. \acrshort{wpa2} s’est ainsi imposé comme le
 mécanisme de sécurité de référence pour les réseaux sans fil pendant plus d’une décennie.
 Toutefois, malgré la robustesse de ses primitives cryptographiques, plusieurs attaques ont montré
 que la sécurité globale du protocole pouvait être compromise par des faiblesses liées aux
-mécanismes d’authentification et d’établissement des clés.
+mécanismes d’authentification et d’établissement des clés.\\
 
-Le fonctionnement de WPA2 repose sur un échange en quatre étapes, appelé \textit{4-Way
-Handshake}, destiné à établir des clés de session uniques entre le client et le point d’accès. À
-partir d’une clé maîtresse partagée (PMK), dérivée soit d’une phrase de passe dans le mode
+Le fonctionnement de \acrshort{wpa2} repose sur un échange en quatre étapes, appelé \gls{handshake}, destiné à établir des clés de session uniques entre le client et le point d’accès. À
+partir d’une clé maîtresse partagée (\acrshort{pmk}), dérivée soit d’une \gls{passphrase} dans le mode
 \textit{WPA2-Personal}, soit des paramètres d’authentification 802.1X dans le mode
-\textit{WPA2-Enterprise}, le protocole permet de générer une clé temporaire de session (PTK)
+\textit{WPA2-Enterprise}, le protocole permet de générer une clé temporaire de session (\acrshort{ptk})
 utilisée pour chiffrer les communications unicast. Cet échange assure également la synchronisation
-des compteurs et des nonces nécessaires à la sécurité du chiffrement.
+des compteurs et des nonces nécessaires à la sécurité du chiffrement.\\
 
 Dans le cas du mode \textit{WPA2-Personal}, l’attaque la plus répandue consiste à capturer le
-\textit{4-Way Handshake} lors de l’authentification d’un client légitime, puis à effectuer un
-craquage hors ligne de la phrase de passe. Cette attaque ne nécessite aucune interaction
+\gls{handshake} lors de l’authentification d’un client légitime, puis à effectuer un
+craquage hors ligne de la \gls{passphrase}. Cette attaque ne nécessite aucune interaction
 supplémentaire avec le réseau cible après la capture du handshake, ce qui la rend particulièrement
 discrète. La faisabilité de l’attaque dépend principalement de la complexité du mot de passe
 utilisé. Les phrases de passe courtes ou basées sur des dictionnaires peuvent être compromises en
 quelques heures à l’aide d’outils exploitant des capacités de calcul parallèles, notamment via des
-processeurs graphiques.
+processeurs graphiques.\\
 
 Bien que le protocole WPA2-Enterprise repose sur une authentification individuelle et offre une
 résistance accrue face aux attaques par dictionnaire, il n’est pas exempt de menaces. Des
 configurations incorrectes, telles que l’absence de validation du certificat du serveur
 d’authentification par les clients, peuvent permettre des attaques de type \textit{Evil Twin},
-conduisant à l’interception des identifiants ou à l’usurpation de sessions.
+conduisant à l’interception des identifiants ou à l’usurpation de sessions.\\
 
 En 2017, la découverte de l’attaque KRACK (\textit{Key Reinstallation Attack}) a profondément
-remis en question la sécurité de WPA2. Cette attaque exploite une faiblesse protocolaire du
-\textit{4-Way Handshake}, en forçant la retransmission de certains messages afin de provoquer la
+remis en question la sécurité de \acrshort{wpa2}. Cette attaque exploite une faiblesse protocolaire du
+\gls{handshake}, en forçant la retransmission de certains messages afin de provoquer la
 réinstallation d’une clé de chiffrement déjà utilisée. Cette réinitialisation entraîne la réutilisation
 de nonces et la remise à zéro des compteurs de rejeu, permettant à un attaquant situé à portée
-radio d’intercepter ou de manipuler les communications chiffrées.
+radio d’intercepter ou de manipuler les communications chiffrées.\\
 
 L’attaque KRACK a démontré que la sécurité d’un protocole ne repose pas uniquement sur la
 solidité de ses algorithmes cryptographiques, mais également sur la rigueur de sa conception
 protocolaire et de ses implémentations. Bien que des correctifs logiciels aient été rapidement
 déployés pour atténuer cette vulnérabilité, KRACK a mis en évidence des limites structurelles de
-WPA2 et a constitué un facteur déterminant dans le développement et l’adoption de WPA3.
+\acrshort{wpa2} et a constitué un facteur déterminant dans le développement et l’adoption de \acrshort{wpa3}.\\
 
-Malgré ces vulnérabilités, WPA2 demeure largement déployé dans de nombreux environnements,
+Malgré ces vulnérabilités, \acrshort{wpa2} demeure largement déployé dans de nombreux environnements,
 en particulier dans les réseaux domestiques et les petites infrastructures professionnelles. Ce
-constat justifie l’étude approfondie des attaques ciblant WPA2, qui restent aujourd’hui parmi les
+constat justifie l’étude approfondie des attaques ciblant \acrshort{wpa2}, qui restent aujourd’hui parmi les
 menaces les plus réalistes et les plus exploitables dans un contexte opérationnel.
 
-\subsection{Focus sur WPA3 et les attaques Dragonblood}
+\subsubsection{Focus sur WPA3 et les attaques Dragonblood}
 
-WPA3 a été introduit afin de renforcer la sécurité des réseaux Wi-Fi, notamment en remplaçant le
+\acrshort{wpa3} a été introduit afin de renforcer la sécurité des réseaux Wi-Fi, notamment en remplaçant le
 mécanisme d’authentification basé sur une clé pré-partagée par le protocole SAE
 (\textit{Simultaneous Authentication of Equals}). Ce choix vise en particulier à supprimer les
 attaques par dictionnaire hors ligne qui affectent les déploiements \textit{WPA2-Personal}, en
 rendant l’attaque dépendante d’interactions actives et en limitant les tentatives possibles.
-WPA3 impose également l’usage des \textit{Protected Management Frames} (PMF), réduisant
+\acrshort{wpa3} impose également l’usage des \textit{Protected Management Frames} (PMF), réduisant
 l’efficacité des attaques reposant sur la falsification de trames de gestion, comme la
-désauthentification.
+désauthentification.\\
 
 Toutefois, la robustesse théorique d’un protocole ne garantit pas l’absence de vulnérabilités
 pratiques. En 2019, une famille de failles, regroupées sous le nom de \textit{Dragonblood}, a été
-publiée par Mathy Vanhoef et Eyal Ronen. Ces vulnérabilités ne remettent pas en cause le principe
+publiée par Mathy Vanhoef et Eyal Ronen\cite{Dragonbl69:online}. Ces vulnérabilités ne remettent pas en cause le principe
 cryptographique de SAE, mais ciblent principalement des aspects d’implémentation et des choix
 d’intégration, notamment la phase de dérivation de la clé et certaines possibilités de repli
-(\textit{downgrade}) dans des environnements de compatibilité.
+(\textit{downgrade}) dans des environnements de compatibilité.\\
 
 Une première catégorie d’attaques identifiée dans \textit{Dragonblood} concerne les attaques par
 canaux auxiliaires (\textit{side-channel attacks}). SAE s’appuie sur une procédure dite de
 \textit{Hunting and Pecking} pour dériver un élément de groupe à partir du mot de passe.
 Certaines implémentations vulnérables présentent des variations mesurables (temps d’exécution,
-accès mémoire, consommation de ressources) lors de cette dérivation. Un attaquant capable
+accès mémoire, consommation de ressources) lors de cette dérivation.\\ 
+
+Un attaquant capable
 d’observer ces variations peut réduire l’espace de recherche du mot de passe et accélérer une
 attaque par dictionnaire, en éliminant une partie des candidats. Bien que ces attaques soient plus
-contraignantes que le craquage hors ligne classique de WPA2, elles soulignent l’importance de
+contraignantes que le craquage hors ligne classique de \acrshort{wpa2}, elles soulignent l’importance de
 contre-mesures d’implémentation, telles que l’exécution en temps constant et la réduction des
-fuites d’information.
+fuites d’information.\\
 
 Une seconde catégorie mise en évidence concerne des attaques de repli (\textit{downgrade
 attacks}). Dans certains scénarios de transition ou de compatibilité, un point d’accès peut être
-configuré pour accepter à la fois WPA2 et WPA3 (\textit{WPA3 Transition Mode}). Dans ce
+configuré pour accepter à la fois \acrshort{wpa2} et \acrshort{wpa3}. Dans ce
 contexte, un attaquant peut tenter d’influencer la négociation afin de forcer l’usage de mécanismes
-moins robustes (par exemple un retour vers WPA2) ou de paramètres cryptographiques plus
+moins robustes (par exemple un retour vers \acrshort{wpa2}) ou de paramètres cryptographiques plus
 faibles, réintroduisant des vulnérabilités connues. Ces attaques rappellent que la coexistence de
 standards hétérogènes, fréquente dans les environnements réels, constitue une source de risque
-importante et peut limiter l’efficacité des améliorations introduites par les nouveaux protocoles.
+importante et peut limiter l’efficacité des améliorations introduites par les nouveaux protocoles.\\
 
-L’existence de \textit{Dragonblood} montre ainsi que l’adoption de WPA3 ne supprime pas
+L’existence de \textit{Dragonblood} montre ainsi que l’adoption de \acrshort{wpa3} ne supprime pas
 instantanément toutes les menaces, mais déplace une partie du risque vers des aspects plus
-spécifiques : sécurité des implémentations, choix de configuration et gestion de la compatibilité.
+spécifiques : sécurité des implémentations, choix de configuration et gestion de la compatibilité.\\
+
 En pratique, les contre-mesures recommandées reposent sur l’application des correctifs fournis par
 les constructeurs, l’évitement du \textit{Transition Mode} lorsque cela est possible, l’utilisation de
 paramètres cryptographiques robustes, ainsi que le maintien de bonnes pratiques de sécurité
@@ -258,178 +257,206 @@ paramètres cryptographiques robustes, ainsi que le maintien de bonnes pratiques
 avec l’idée que, même lorsque les protocoles évoluent, la sécurité effective d’un réseau Wi-Fi
 dépend fortement de son déploiement opérationnel.
 
-\subsection{Attaques PMKID : compromission sans client connecté}
+\subsection{Autres types d'attaques}
+
+\subsubsection{Attaques PMKID : compromission sans client connecté\cite{Bulletin6:online}}
 
 Les attaques PMKID constituent une évolution significative des techniques de compromission des
-réseaux WPA2, en ce qu’elles permettent de lancer une attaque par dictionnaire sans nécessiter la
-capture préalable du \textit{4-Way Handshake} ni la présence d’un client déjà authentifié sur le
+réseaux \acrshort{wpa2}, en ce qu’elles permettent de lancer une attaque par dictionnaire sans nécessiter la
+capture préalable du \gls{handshake} ni la présence d’un client déjà authentifié sur le
 réseau. Cette attaque, révélée en 2018, exploite une fonctionnalité optionnelle du protocole
-IEEE~802.11i liée à l’identification de la clé maîtresse partagée.
+IEEE 802.11i liée à l’identification de la clé maîtresse partagée.\\
 
-Le PMKID (\textit{Pairwise Master Key Identifier}) est une valeur dérivée de la clé maîtresse PMK
+Le PMKID (\textit{Pairwise Master Key Identifier}) est une valeur dérivée de la clé maîtresse \acrshort{pmk}
 et transmise par le point d’accès dans certaines trames EAPOL lors de l’initialisation d’une
-connexion. Il est calculé à partir d’une fonction de hachage cryptographique incluant la PMK, les
+connexion. Il est calculé à partir d’une fonction de hachage cryptographique incluant la \acrshort{pmk}, les
 adresses MAC du point d’accès et du client, ainsi qu’une chaîne constante. Dans certaines
 configurations, notamment lorsque des mécanismes de roaming rapide sont activés, cette valeur
-peut être transmise avant même l’établissement complet du \textit{4-Way Handshake}.
+peut être transmise avant même l’établissement complet du \gls{handshake}.\\
 
 Un attaquant peut exploiter ce comportement en envoyant une simple requête d’initiation de
 connexion au point d’accès, sans qu’aucun client légitime ne soit connecté. La réponse du point
 d’accès contient alors le PMKID, que l’attaquant peut capturer passivement. Cette information
 suffit à lancer une attaque hors ligne par dictionnaire ou force brute sur la clé maîtresse, de
-manière similaire aux attaques basées sur le \textit{4-Way Handshake}, mais sans nécessiter
-d’attaque active préalable telle qu’une désauthentification.
+manière similaire aux attaques basées sur le \gls{handshake}, mais sans nécessiter
+d’attaque active préalable telle qu’une désauthentification.\\
 
 L’attaque PMKID présente un avantage opérationnel majeur : elle est plus discrète que les
 attaques classiques reposant sur la capture du handshake, car elle ne génère ni déconnexion de
 clients ni trafic suspect perceptible par les utilisateurs. Elle est également plus rapide à mettre
 en œuvre, puisqu’elle ne dépend pas du comportement des clients légitimes. Des outils dédiés
 permettent d’automatiser la capture du PMKID et sa conversion dans un format exploitable par des
-logiciels de craquage hors ligne utilisant des capacités de calcul parallèles.
+logiciels de craquage hors ligne utilisant des capacités de calcul parallèles.\\
 
-Comme pour les attaques par capture du \textit{4-Way Handshake}, la réussite de l’attaque PMKID
-dépend essentiellement de la robustesse de la phrase de passe utilisée. Les réseaux reposant sur
+Comme pour les attaques par capture du \gls{handshake}, la réussite de l’attaque PMKID
+dépend essentiellement de la robustesse de la \gls{passphrase} utilisée. Les réseaux reposant sur
 des mots de passe faibles ou prévisibles restent vulnérables, indépendamment de l’absence de
 clients connectés. Cette attaque souligne ainsi une faiblesse fondamentale des modes
-\textit{WPA2-Personal}, fondés sur des clés pré-partagées.
+\textit{WPA2-Personal}, fondés sur des clés pré-partagées.\\
 
 Les contre-mesures face aux attaques PMKID incluent l’utilisation de phrases de passe longues et
 complexes, la désactivation des fonctionnalités de roaming non nécessaires, ainsi que la
-migration vers WPA3. En remplaçant l’échange de clés par le protocole SAE, WPA3 supprime la
+migration vers \acrshort{wpa3}. En remplaçant l’échange de clés par le protocole SAE, \acrshort{wpa3} supprime la
 possibilité d’attaques hors ligne de ce type et offre une meilleure résistance face aux tentatives
 de compromission passives.
 
-\subsection{Attaques par désauthentification et déni de service}
+\subsubsection{Attaques par désauthentification et déni de service}
 
 Les attaques par désauthentification figurent parmi les attaques actives les plus anciennes et les
 plus fondamentales visant les réseaux Wi-Fi. Elles exploitent une caractéristique du standard
-IEEE~802.11 selon laquelle certaines trames de gestion, notamment les trames de
+IEEE 802.11 selon laquelle certaines trames de gestion, notamment les trames de
 désauthentification et de désassociation, peuvent être envoyées par un point d’accès ou un client
-afin d’indiquer la fin légitime d’une session sans fil.
+afin d’indiquer la fin légitime d’une session sans fil.\\
 
 Dans les premières versions du standard, ces trames de gestion ne sont ni chiffrées ni
-authentifiées, y compris lorsque les communications de données sont protégées par WEP, WPA ou
-WPA2. Un attaquant situé à portée radio peut ainsi forger des trames de désauthentification en
+authentifiées, y compris lorsque les communications de données sont protégées par \acrshort{wep}, \acrshort{wpa} ou
+\acrshort{wpa2}. Un attaquant situé à portée radio peut ainsi forger des trames de désauthentification en
 usurpant l’adresse MAC du point d’accès ou du client cible, et forcer la rupture de la connexion
-sans disposer d’aucune clé cryptographique.
+sans disposer d’aucune clé cryptographique.\\
 
 L’attaque par désauthentification peut être utilisée comme une attaque par déni de service, en
 envoyant de manière répétée des trames de désauthentification afin d’empêcher toute connexion
 stable des clients légitimes. Toutefois, son intérêt principal réside dans son rôle de prérequis pour
-de nombreuses autres attaques Wi-Fi. En forçant la déconnexion d’un client, l’attaquant provoque
-une reconnexion automatique, générant ainsi un \textit{4-Way Handshake} pouvant être capturé à
+de nombreuses autres attaques Wi-Fi. 
+
+En forçant la déconnexion d’un client, l’attaquant provoque
+une reconnexion automatique, générant ainsi un \gls{handshake} pouvant être capturé à
 des fins de craquage hors ligne. Cette technique est largement utilisée pour accélérer les attaques
-contre les réseaux WPA/WPA2-Personal.
+contre les réseaux \acrshort{wpa}/\acrshort{wpa2}-Personal.\\
 
 Les attaques par désauthentification sont également exploitées pour révéler des SSID prétendument
 cachés. Lorsqu’un client se reconnecte à un réseau dont le SSID n’est pas diffusé dans les trames
 balises, il inclut le nom du réseau dans certaines trames de gestion, permettant à un attaquant
-passif d’identifier le SSID réel. De manière plus générale, la désauthentification facilite la mise
+passif d’identifier le SSID réel. 
+
+De manière plus générale, la désauthentification facilite la mise
 en œuvre d’attaques de type \textit{Evil Twin}, en forçant les clients à se reconnecter à un point
-d’accès malveillant présentant un signal plus fort ou une configuration trompeuse.
+d’accès malveillant présentant un signal plus fort ou une configuration trompeuse.\\
 
 La simplicité de mise en œuvre de ces attaques, combinée à leur efficacité, explique leur large
 diffusion. Des outils spécialisés permettent d’automatiser l’envoi massif de trames de
 désauthentification en ciblant un point d’accès, un client spécifique ou l’ensemble des clients
-associés à un réseau donné. Cette facilité d’exploitation rend les attaques par
-désauthentification particulièrement accessibles, même pour des attaquants disposant de
-compétences techniques limitées.
+associés à un réseau donné. 
 
-Afin de remédier à ces vulnérabilités, le standard IEEE~802.11w a introduit les
+Cette facilité d’exploitation rend les attaques par
+désauthentification particulièrement accessibles, même pour des attaquants disposant de
+compétences techniques limitées.\\
+
+Afin de remédier à ces vulnérabilités, le standard IEEE 802.11w a introduit les
 \textit{Protected Management Frames} (PMF), visant à chiffrer et authentifier certaines trames de
 gestion critiques. Lorsque PMF est activé, les trames de désauthentification et de désassociation
 ne peuvent plus être forgées sans disposer des clés cryptographiques appropriées. Bien que PMF
-soit optionnel dans WPA2, il devient obligatoire avec WPA3, réduisant significativement
-l’efficacité de ces attaques. Néanmoins, la persistance de réseaux n’implémentant pas PMF
+soit optionnel dans \acrshort{wpa2}, il devient obligatoire avec \acrshort{wpa3}, réduisant significativement
+l’efficacité de ces attaques. 
+
+Néanmoins, la persistance de réseaux n’implémentant pas PMF
 maintient les attaques par désauthentification parmi les menaces les plus répandues dans les
 environnements Wi-Fi actuels.
 
-\subsection{Attaques Evil Twin et usurpation de points d’accès}
+\subsubsection{Attaques Evil Twin et usurpation de points d’accès}
 
 Les attaques de type \textit{Evil Twin} reposent sur l’usurpation de l’identité d’un point d’accès
 Wi-Fi légitime afin de tromper les utilisateurs et intercepter leurs communications. Contrairement
 aux attaques purement cryptographiques, les attaques Evil Twin exploitent principalement les
 mécanismes de gestion du réseau sans fil ainsi que le comportement des clients, ce qui les rend
 particulièrement efficaces dans des environnements réels tels que les réseaux publics ou
-d’entreprise.
+d’entreprise.\\
 
 Le principe fondamental d’une attaque Evil Twin consiste à créer un faux point d’accès
 reproduisant les caractéristiques visibles d’un réseau légitime, notamment son SSID et, dans
-certains cas, son adresse MAC. L’attaquant configure généralement ce point d’accès malveillant
+certains cas, son adresse MAC. 
+
+L’attaquant configure généralement ce point d’accès malveillant
 avec une puissance d’émission plus élevée que celle du point d’accès authentique, ou combine
 l’attaque avec des trames de désauthentification afin de forcer les clients à se reconnecter. Les
 terminaux privilégient alors automatiquement le point d’accès offrant le signal le plus fort, sans
-être en mesure de distinguer le réseau légitime de sa copie.
+être en mesure de distinguer le réseau légitime de sa copie.\\
 
 Une fois la connexion établie entre la victime et le point d’accès malveillant, l’attaquant se place
 en position d’homme du milieu (\textit{Man-in-the-Middle}). Il peut alors intercepter, modifier ou
 rediriger le trafic réseau, capturer des données sensibles ou déployer des attaques
-complémentaires. Dans le cas des réseaux ouverts ou protégés par WPA/WPA2-Personal, l’attaquant
+complémentaires. 
+
+Dans le cas des réseaux ouverts ou protégés par \acrshort{wpa}/\acrshort{wpa2}-Personal, l’attaquant
 peut mettre en place un portail captif frauduleux imitant une page de connexion légitime afin de
-récupérer des identifiants ou des phrases de passe Wi-Fi.
+récupérer des identifiants ou des phrases de passe Wi-Fi.\\
 
 Les attaques Evil Twin sont particulièrement efficaces contre les réseaux utilisant des clés
 pré-partagées, car la victime ne dispose d’aucun mécanisme permettant de vérifier l’authenticité
-du point d’accès. Même lorsque la phrase de passe saisie est correcte, celle-ci peut être capturée
-par l’attaquant et réutilisée ultérieurement pour se connecter au réseau légitime. Dans les
+du point d’accès. Même lorsque la \gls{passphrase} saisie est correcte, celle-ci peut être capturée
+par l’attaquant et réutilisée ultérieurement pour se connecter au réseau légitime. 
+
+Dans les
 environnements \textit{WPA2-Enterprise}, ces attaques restent possibles en cas de mauvaise
 configuration des clients, notamment lorsque ceux-ci ne vérifient pas le certificat du serveur
-d’authentification, permettant ainsi l’usurpation du rôle du serveur RADIUS.
+d’authentification, permettant ainsi l’usurpation du rôle du serveur RADIUS.\\
 
 Les conséquences d’une attaque Evil Twin peuvent aller bien au-delà de la simple interception du
 trafic Wi-Fi. En contrôlant la passerelle réseau, l’attaquant peut lancer des attaques de type
 \textit{SSL Stripping}, des redirections DNS malveillantes, ou injecter du contenu frauduleux dans
-les flux applicatifs. Ces attaques combinées permettent de compromettre des identifiants
+les flux applicatifs. 
+
+Ces attaques combinées permettent de compromettre des identifiants
 applicatifs, des sessions web ou des données sensibles, même lorsque des protocoles de sécurité
-supérieurs sont partiellement déployés.
+supérieurs sont partiellement déployés.\\
 
 Les contre-mesures face aux attaques Evil Twin reposent sur une combinaison de mécanismes
-techniques et organisationnels. L’utilisation de WPA2-Enterprise ou WPA3-Enterprise avec
+techniques et organisationnels. L’utilisation de \acrshort{wpa2}-Enterprise ou \acrshort{wpa3}-Enterprise avec
 authentification mutuelle basée sur des certificats numériques constitue la protection la plus
 efficace, à condition que les clients valident correctement le certificat du serveur
-d’authentification. L’activation des \textit{Protected Management Frames} limite l’efficacité des
+d’authentification. 
+
+L’activation des \textit{Protected Management Frames} limite l’efficacité des
 attaques par désauthentification utilisées pour faciliter ces scénarios. Enfin, le déploiement de
 systèmes de détection d’intrusion sans fil (WIDS/WIPS) et la sensibilisation des utilisateurs aux
 risques des réseaux Wi-Fi non fiables complètent les mesures de défense contre ce type d’attaque.
 
-\subsection{Attaques par compromission applicative : Man-in-the-Middle et SSL Stripping}
+\subsubsection{Attaques par compromission applicative : Man-in-the-Middle et SSL Stripping}
 
 Les attaques de type \textit{Man-in-the-Middle} (MITM) constituent une catégorie d’attaques
 transversales exploitant une position intermédiaire entre la victime et les services auxquels elle
 accède. Dans un contexte Wi-Fi, cette position est fréquemment obtenue à la suite d’attaques de
 désauthentification ou d’attaques \textit{Evil Twin}, qui permettent à l’attaquant de contrôler le
-point d’accès ou la passerelle réseau utilisée par les clients.
+point d’accès ou la passerelle réseau utilisée par les clients.\\
 
 Une fois en position MITM, l’attaquant est en mesure d’intercepter, de modifier ou de rediriger le
 trafic réseau de la victime de manière transparente. Cette capacité ouvre la voie à de nombreuses
 attaques visant les couches supérieures du modèle OSI, en particulier les protocoles applicatifs
-reposant sur HTTP et HTTPS. Contrairement aux attaques ciblant directement les mécanismes de
+reposant sur HTTP et HTTPS.
+
+Contrairement aux attaques ciblant directement les mécanismes de
 sécurité Wi-Fi, ces attaques exploitent des hypothèses de confiance implicites dans les
-communications réseau.
+communications réseau.\\
 
 Parmi les attaques MITM les plus connues figure le \textit{SSL Stripping}, qui consiste à empêcher
 la transition d’une connexion HTTP vers HTTPS. De nombreux utilisateurs accèdent initialement à
 un service web via une URL non chiffrée, s’en remettant à la redirection automatique vers HTTPS
-effectuée par le serveur. En position d’homme du milieu, l’attaquant intercepte cette redirection et
+effectuée par le serveur. 
+
+En position d’homme du milieu, l’attaquant intercepte cette redirection et
 maintient une connexion chiffrée légitime avec le serveur distant, tout en présentant à la victime
 une connexion HTTP non chiffrée. La victime perçoit alors une interface apparemment normale,
 tandis que les données sensibles transmises, telles que des identifiants ou des informations
-personnelles, circulent en clair entre le client et l’attaquant.
+personnelles, circulent en clair entre le client et l’attaquant.\\
 
 Les attaques MITM peuvent également s’appuyer sur des techniques complémentaires telles que
 l’empoisonnement ARP, la falsification de réponses DNS ou l’injection de certificats frauduleux,
-lorsque les mécanismes de validation côté client sont insuffisants. Dans un environnement Wi-Fi
+lorsque les mécanismes de validation côté client sont insuffisants. 
+
+Dans un environnement Wi-Fi
 compromis, ces attaques sont particulièrement difficiles à détecter pour l’utilisateur final, car
-elles ne nécessitent pas la compromission directe du terminal.
+elles ne nécessitent pas la compromission directe du terminal.\\
 
 Les contre-mesures face aux attaques MITM et SSL Stripping reposent principalement sur le
 renforcement de la sécurité aux couches supérieures. L’utilisation systématique de HTTPS,
 combinée à des mécanismes tels que HSTS (\textit{HTTP Strict Transport Security}), empêche le
-downgrade vers HTTP et neutralise efficacement les attaques de type SSL Stripping. La validation
+downgrade vers HTTP et neutralise efficacement les attaques de type SSL Stripping. 
+
+La validation
 rigoureuse des certificats TLS par les clients est essentielle pour prévenir l’usurpation de serveurs
 légitimes. En complément, l’utilisation de réseaux privés virtuels (VPN) permet de chiffrer
 l’ensemble du trafic utilisateur, réduisant l’impact d’une compromission du réseau Wi-Fi
-sous-jacent.
+sous-jacent.\\
 
 Ces attaques illustrent la nécessité d’une approche de sécurité globale, dépassant la seule
 protection du lien radio. Même lorsque les mécanismes Wi-Fi sont correctement configurés, une
