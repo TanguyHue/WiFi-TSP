@@ -1,17 +1,17 @@
 \section{Fonctionnement des Protocoles Wi-Fi}
 \label{sec:protocoles}
 
-La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis \acrshort{wep} en 1997 jusqu'à \acrshort{wpa3} en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouvelles principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leur logique interne, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
+La sécurité des réseaux Wi-Fi repose sur une succession de mécanismes cryptographiques introduits progressivement pour corriger les vulnérabilités de leurs prédécesseurs. Depuis \acrshort{wep} en 1997 jusqu'à \acrshort{wpa3} en 2018, chaque protocole a apporté des évolutions majeures : nouveaux algorithmes, nouveaux principes cryptographiques, mécanismes d'intégrité plus robustes, protection des trames de gestion, et résistance aux attaques hors ligne. Cette section propose une analyse approfondie de ces mécanismes, de leurs logiques internes, de leurs limites, ainsi que des structures de trames qu'ils manipulent.
 
 \subsection{Principe général du Wi-Fi}
 
 Le Wi-Fi, ou norme IEEE 802.11, désigne un ensemble de standards pour les réseaux locaux sans fil (WLAN) permettant la transmission de données numériques par ondes radio (principalement 2,4 GHz, 5 GHz et 6 GHz). Développé à partir des années 1990 par le comité IEEE 802.11 pour répondre à la demande croissante de connectivité mobile sans câblage Ethernet, le premier standard a été publié en 1997, révolutionnant l'accès aux données en éliminant les contraintes physiques des réseaux filaires.
 
-Aujourd'hui, le Wi-Fi est omniprésent : points d'accès publics (cafés, aéroports, transports), entreprises, foyers. Avec Wi-Fi 7 (802.11be, 2024) et au-delà, il supporte des débits >46 Gbit/s\cite{WiFi7pou99:online}.
+Aujourd'hui, le Wi-Fi est omniprésent : points d'accès publics (cafés, aéroports, transports), entreprises, foyers. Avec Wi-Fi 7 (802.11be, 2024) et au-delà, il supporte des débits supérieur à 46 Gbit/s\cite{WiFi7pou99:online}.
 
 \subsection*{Définitions générales Wi-Fi}
 
-Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{\acrfull{ssid}} correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{\acrfull{bssid}}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{\acrfull{ap}} désigne ce même point d’accès, tandis que la \textbf{\acrfull{sta}} représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté.
+Avant d’aborder en détail le fonctionnement des différents protocoles de sécurité, il est utile de préciser brièvement certains termes fondamentaux du Wi-Fi. Le \textbf{\acrfull{ssid}} correspond au nom d’un réseau et permet aux dispositifs de l’identifier lors de la phase de découverte. Le \textbf{\acrfull{bssid}}, quant à lui, désigne l’adresse MAC unique du point d’accès assurant la diffusion du réseau. Le terme \textbf{\acrfull{ap}} désigne ce même point d’accès, tandis que la \textbf{\acrfull{sta}} représente tout client Wi-Fi, qu’il s’agisse d’un ordinateur, d’un smartphone ou d’un objet connecté. La figure \ref{fig:ap_sta_ssid_bssid} illustre les interactions entre les différents appareils.
 
 \begin{figure}[H]
 \centering
@@ -49,7 +49,7 @@ Le Wi-Fi supporte plusieurs modes de mise en réseau, adaptés à des usages var
 
 \paragraph{Mode Infrastructure}
 
-Ce mode connecte les stations (\acrshort{sta}) via un ou plusieurs points d'accès (\acrshort{ap}) qui agissent comme des \glspl{concentrateur}. Initialement utilisé en entreprise pour poser des bornes à intervalles réguliers, il nécessite un \acrshort{ssid} commun pour la communication. L'avantage principal est le contrôle centralisé des accès : passage obligatoire par l'\acrshort{ap}. Aujourd'hui, les routeurs fournis par les \acrshort{fai} aux particuliers fonctionnent en mode infrastructure, faciles à configurer.
+Ce mode connecte les stations (\acrshort{sta}) via un ou plusieurs points d'accès (\acrshort{ap}) qui agissent comme des \glspl{concentrateur}. Initialement utilisé en entreprise pour poser des bornes à intervalles réguliers, il nécessite un \acrshort{ssid} commun pour la communication. L'avantage principal est le contrôle centralisé des accès : passage obligatoire par l'\acrshort{ap}, comme illustré dans la figure \ref{fig:infra_mode}. Aujourd'hui, les routeurs fournis par les \acrshort{fai} aux particuliers fonctionnent en mode infrastructure, faciles à configurer.
 
 \begin{figure}[H]
 \centering
@@ -65,12 +65,13 @@ Ce mode connecte les stations (\acrshort{sta}) via un ou plusieurs points d'acc�
 \draw[->] (ap) -- (sta3);
 \node[font=\small, above=0.2cm of ap] {Mode Infrastructure};
 \end{tikzpicture}
-\caption{Mode Infrastructure : STA $\rightarrow$ AP central $\rightarrow$ Internet}
+\caption{Mode Infrastructure : Utilisation d'un AP central}
+\label{fig:infra_mode}
 \end{figure}
 
 \paragraph{Mode Ad hoc}
 
-Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un \acrshort{ssid}, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique étendent la portée en mode maillé, où chaque noeud route pour les autres.
+Ce mode permet une connexion directe entre stations sans point d'accès intermédiaire. Idéal pour des échanges rapides (fichiers entre portables dans un train ou un café), il repose sur un \acrshort{ssid}, un canal et une clé de chiffrement communs. Des protocoles de routage dynamique étendent la portée en mode maillé, où chaque noeud route pour les autres, comme illustré sur la figure \ref{fig:ad_hoc_mode}.
 
 \begin{figure}[H]
 \centering
@@ -86,11 +87,12 @@ Ce mode permet une connexion directe entre stations sans point d'accès intermé
 \node[font=\small, below=0.2cm of sta2] {Mode Ad hoc : Direct STA $\leftrightarrow$ STA};
 \end{tikzpicture}
 \caption{Mode Ad hoc : communication directe sans AP}
+\label{fig:ad_hoc_mode}
 \end{figure}
 
 \paragraph{Mode Pont (Bridge)}
 
-Un \acrshort{ap} en mode pont relie d'autres \acrshort{ap} pour étendre un réseau filaire (ex. : entre bâtiments) au niveau couche 2 OSI. Un \acrshort{ap} racine distribue l'accès Internet, les autres se connectent en mode bridge et peuvent accueillir des clients comme en infrastructure.
+Un \acrshort{ap} en mode pont relie d'autres \acrshort{ap} pour étendre un réseau filaire (ex. : entre bâtiments) au niveau couche 2 OSI. Un \acrshort{ap} racine distribue l'accès Internet, les autres se connectent en mode bridge et peuvent accueillir des clients comme en infrastructure. Vous pouvez retrouver ce mode illustré sur la figure \ref{fig:bridge_mode}.
 
 \begin{figure}[H]
 \centering
@@ -106,11 +108,12 @@ Un \acrshort{ap} en mode pont relie d'autres \acrshort{ap} pour étendre un rés
 \draw[<->] (bridge2) -- (sta1);
 \end{tikzpicture}
 \caption{Mode Pont : extension réseau filaire via APs}
+\label{fig:bridge_mode}
 \end{figure}
 
 \paragraph{Mode Répéteur (Range-extender)}
 
-Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). Chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne).
+Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). Chaque saut augmente la latence et divise le débit par deux (réception + retransmission sur la même antenne). On utilise un répéteur entre le routeur principal et le \acrshort{sta}, comme illustré sur la figure \ref{fig:extended_mode}.
 
 \begin{figure}[H]
 \centering
@@ -124,7 +127,10 @@ Ce mode étend la couverture en répétant le signal (ex. : fond de couloir). Ch
 \draw[<->] (repeater) -- node[midway, above] {Signal Wi-Fi 2} (sta);
 \end{tikzpicture}
 \caption{Mode Répéteur : extension portée (débit /2, +latence)}
+\label{fig:extended_mode}
 \end{figure}
+
+En récapitulant ces quatre modes, on obtient le tableau ci-dessous, indiquant les liens entre les différents appareils, ainsi que l'usage habituel de chaque mode.
 
 \begin{table}[H]
 \centering
@@ -160,7 +166,7 @@ WEP repose sur l'algorithme de chiffrement par flot \acrshort{rc4}. Le mécanism
 \begin{itemize}
     \item une clé secrète partagée statique, nommée SharedKey (40 ou 104 bits) ;
     \item un \acrfull{iv} de 24 bits, envoyé en clair ;
-    \item concaténation \texttt{IV || clé} comme entrée de RC4 ;
+    \item concaténation \texttt{IV || SharedKey} comme entrée de RC4 ;
     \item un \acrfull{icv} calculé via CRC-32, ajouté au plaintext (\textit{texte en clair}) avant chiffrement.
 \end{itemize}
 
@@ -257,9 +263,6 @@ Pour mieux comprendre le problème majeur de la taille de l'IV, nous allons pren
 En pratique, avec Aircrack NG, William Arbaugh note qu'il existe 50 \% de risque de collision après 4 823 paquets. \cite{Aircrack74:online}
 La documentation conseille elle 250,000 IVs pour des clés de 64 bit et 1,500,000 IVs pour des clés de 128 bit. \cite{simplewe40:online}
 
-\newpage
-
-
 % WPA
 
 \subsubsection{WPA : Wi-Fi Protected Access}
@@ -305,26 +308,8 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
     \end{figure}
 
     
-    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé (\Gls{anonce}/\Gls{snonce} + \acrfull{mic} protègent).
-    \\Les nonces (\Gls{anonce}, générée par l'\acrshort{ap} et \Gls{snonce}, générée par la \acrshort{sta}) garantissent l'unicité de la PTK à chaque association, même si la PMK reste identique. Le \acrshort{mic}, calculé à l'aide de la clé \acrfull{kck} (extraite de la PTK), assure l'intégrité et l'authenticité des messages du handshake.
-
-    
-    \begin{figure}[H]
-        \centering
-        % Schéma 2 : Phase 2  
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners, minimum width=2cm, minimum height=0.9cm, align=center}
-        ]
-        \node[box] (pmk2) {PMK};
-        \node[box, right=1.8cm of pmk2] (handshake) {4-Way Handshake};
-        \node[box, right=1.8cm of handshake] (ptk) {Pairwise Transient Key\\512 bits};
-
-        \draw[->] (pmk2) -- (handshake);
-        \draw[->] (handshake) -- (ptk);
-        \end{tikzpicture}
-        \caption{Phase 2 : Création d'une clé unique en \acrshort{ap} et \acrshort{sta}}
-        \label{fig:wpa_phase_2}
-    \end{figure}
+    \item \textbf{Phase 2 (4-Way \Gls{handshake})} : \acrshort{pmk} $\rightarrow$ \acrshort{ptk} échangée sans jamais transmettre la clé.
+    \\Des nonces (\Gls{anonce}, générée par l'\acrshort{ap} et \Gls{snonce}, générée par la \acrshort{sta}) garantissent l'unicité de la PTK à chaque association lors du \gls{handshake}, même si la PMK reste identique. Le \acrshort{mic}, calculé à l'aide de la clé \acrfull{kck} (extraite de la PTK), assure l'intégrité et l'authenticité des messages du handshake.
 
     % 4-Way Handshake
     Le \textbf{4-Way Handshake} assure 3 objectifs critiques :
@@ -332,7 +317,7 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
     \begin{itemize}
         \item \textbf{Preuve mutuelle PMK} : \acrshort{sta} et \acrshort{ap} prouvent qu'ils connaissent la même PMK sans jamais la transmettre.
         
-        \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : clé unique unicast \acrshort{sta} $\leftrightarrow$ \acrshort{ap}. Utilise une \acrfull{prf}, pour faire cette dérivation : 
+        \item \textbf{PTK (Pairwise Transient Key, 512 bits)} : on utilise une clé unique unicast \acrshort{sta} $\leftrightarrow$ \acrshort{ap}. Une fonction \acrfull{prf} est utilisée, pour faire cette dérivation : 
         \[
             \begin{aligned}
             PTK = \acrshort{prf}(&PMK, \\
@@ -342,7 +327,15 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
             \end{aligned}
         \].
         
-        \item \textbf{GTK (Group Temporal Key)} : clé broadcast/multicast partagée par TOUS les clients du réseau (trafic groupe). L'\acrshort{ap} l'envoie chiffrée avec la PTK du client.
+        \item \textbf{GTK (Group Temporal Key)} : clé utilisée pour la protection du trafic \textbf{broadcast et multicast} entre un \acrshort{ap} et l’ensemble des stations qui lui sont associées.  
+        Toutes les stations utilisent la \textbf{même GTK}, ce qui permet à l’AP de chiffrer une trame une seule fois pour plusieurs destinataires.
+
+        La GTK est dérivée par l’AP à partir de la \textbf{GMK (Group Master Key)}, une clé maître de 128 bits générée localement par l’AP à l’aide d’un générateur de nombres aléatoires de qualité cryptographique.  
+        La GMK n’est jamais échangée directement : elle sert uniquement d’entrée à une fonction pseudo-aléatoire (PRF) pour produire la GTK. L’AP peut régénérer périodiquement la GMK afin de limiter l’impact d’une éventuelle compromission.
+
+        La GTK est transmise de manière sécurisée à chaque station lors du \textit{4-Way Handshake} WPA, chiffrée à l’aide de la \acrshort{ptk} propre au client. Lorsqu’une nouvelle GTK est générée (par exemple lors d’un renouvellement de clé), l’AP utilise un \textbf{Group Key Handshake}, qui est un échange en deux messages (\textit{2-Way Handshake}), pour distribuer la nouvelle clé à toutes les stations déjà associées.
+        \end{itemize}
+
     \end{itemize}
 
     \begin{figure}[H]
@@ -366,6 +359,7 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
     \node[anchor=east, align=right, font=\footnotesize] 
     at (-0.2,-1.5) {%
     Dérivation de la PTK\\
+    KCK, KEK, TK connue\\
     Calcul du MIC (avec \acrshort{kck})
     };
 
@@ -376,6 +370,11 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
     };
 
     % Étapes locales AP (à droite)
+    \node[anchor=west, align=left, font=\footnotesize] 
+    at (6.2,-0.5) {%
+    GMK connue
+    };
+
     \node[anchor=west, align=left, font=\footnotesize] 
     at (6.2,-3) {%
     Vérification du MIC\\
@@ -439,7 +438,7 @@ Ici, nous ne développerons que la méthode avec une \gls{passphrase} connue par
         256 bits &
         Clé maître dérivée (PBKDF2) &
         Phase 1 &
-        À chaque authentification \\
+        Ne change pas si PSK identique \\
 
         PTK &
         512 bits &
@@ -499,7 +498,7 @@ Il assure à la fois :
 Dans WPA utilisant TKIP, le champ appelé \textbf{IV} ne correspond plus à un vecteur d’initialisation aléatoire comme en WEP.  
 Il transporte en réalité une représentation structurée du \acrfull{tsc}, d’où le terme d’\textit{IV étendu}.
 
-\paragraph{Composition de l'IV étendu (16 bits dans la trame) :}  
+\paragraph{Composition de l'IV étendu (32 bits dans la trame) :}  
 Le champ IV envoyé dans la trame est une version codée et partielle du TSC, combinée avec le KeyID et quelques bits de contrôle :
 
 \begin{itemize}
@@ -530,7 +529,7 @@ Cette étape produit une \textbf{clé intermédiaire} spécifique à la station 
 La seconde phase affine cette clé intermédiaire en intégrant :
 \begin{itemize}
     \item les \textbf{16 bits de poids faible du TSC} (\( \text{TSC}[15:0] \)) ;
-    \item des \textbf{bits de contrôle de l’IV}, notamment le bit \textit{ExtIV} et des bits destinés à éviter les IV faibles (nommées \textit{d}).
+    \item des \textbf{bits de contrôle de l’IV}, notamment les bits \textit{ExtIV} et des bits destinés à éviter les IV faibles (nommées \textit{d}).
 \end{itemize}
 
 Cette phase produit la \textbf{clé finale par trame}, appelée \acrfull{ppk}, utilisée comme entrée de l’algorithme RC4.  
@@ -558,7 +557,7 @@ L’ensemble \textit{(données || MIC || ICV)} est finalement chiffré par un XO
 
     % ====== TOP INPUTS ======
     \node[box] (iv) {IV \\ (48 bits)};
-    \node[box, right=1.2cm of iv] (ptk) {PTK \\ (128 bits)};
+    \node[box, right=1.2cm of iv] (ptk) {TK \\ (128 bits)};
     \node[box, right=1.2cm of ptk] (mac) {Sender MAC \\ Address (48 bits)};
 
     % ====== KEY MIXING ======
